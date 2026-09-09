@@ -4,14 +4,17 @@ import { useAuth } from "@/context/AuthContext";
 import { FileText, FileImage, Briefcase, BarChart3, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { collection, getCountFromServer, getDocs, query, orderBy } from "firebase/firestore";
+import { collection, getCountFromServer, getDocs, query, orderBy, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase/client";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+
+type TimeRange = "week" | "month" | "year";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
   const [metrics, setMetrics] = useState({ pages: 0, blogs: 0, applications: 0 });
-  const [trafficData, setTrafficData] = useState<any[]>([]);
+  const [rawTrafficData, setRawTrafficData] = useState<any[]>([]);
+  const [timeRange, setTimeRange] = useState<TimeRange>("month");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,8 +24,7 @@ export default function AdminDashboard() {
           getCountFromServer(collection(db, "pages")),
           getCountFromServer(collection(db, "blog_posts")),
           getCountFromServer(collection(db, "applications")),
-          getDocs(query(collection(db, "website_traffic"), orderBy("date", "asc"))),
-        ]);
+        const trafficSnap = await getDocs(query(collection(db, "website_traffic"), orderBy("date", "desc"), limit(365)));
 
         setMetrics({
           pages: pagesSnap.data().count,
@@ -30,11 +32,9 @@ export default function AdminDashboard() {
           applications: appsSnap.data().count,
         });
 
-        const traffic = trafficSnap.docs.map(doc => {
-          const data = doc.data();
-          return { name: data.date, views: data.views };
-        });
-        setTrafficData(traffic);
+        const traffic = trafficSnap.docs.map(doc => doc.data());
+        // Sort back to ascending for the chart
+        setRawTrafficData(traffic.sort((a, b) => a.date.localeCompare(b.date)));
       } catch (error) {
         console.error("Error fetching metrics:", error);
       } finally {
@@ -43,6 +43,53 @@ export default function AdminDashboard() {
     }
     fetchMetrics();
   }, []);
+
+  const getFilteredTrafficData = () => {
+    if (rawTrafficData.length === 0) return [];
+    
+    const now = new Date();
+    
+    if (timeRange === "week" || timeRange === "month") {
+      const days = timeRange === "week" ? 7 : 30;
+      const cutoff = new Date(now);
+      cutoff.setDate(now.getDate() - days);
+      
+      // Filter last N days and format dates nicely
+      return rawTrafficData
+        .filter(d => new Date(d.date) >= cutoff)
+        .map(d => ({
+          name: new Date(d.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+          views: d.views || 0,
+          visitors: d.visitors || 0
+        }));
+    } else {
+      // Year view: Aggregate by month
+      const cutoff = new Date(now);
+      cutoff.setFullYear(now.getFullYear() - 1);
+      
+      const monthlyData: Record<string, { views: number, visitors: number }> = {};
+      
+      rawTrafficData
+        .filter(d => new Date(d.date) >= cutoff)
+        .forEach(d => {
+          const date = new Date(d.date);
+          const monthKey = date.toLocaleDateString(undefined, { month: 'short', year: '2-digit' });
+          if (!monthlyData[monthKey]) {
+            monthlyData[monthKey] = { views: 0, visitors: 0 };
+          }
+          monthlyData[monthKey].views += (d.views || 0);
+          monthlyData[monthKey].visitors += (d.visitors || 0);
+        });
+        
+      return Object.entries(monthlyData).map(([name, data]) => ({
+        name,
+        views: data.views,
+        visitors: data.visitors
+      }));
+    }
+  };
+
+  const chartData = getFilteredTrafficData();
 
   return (
     <div className="max-w-6xl mx-auto space-y-12">
@@ -109,23 +156,27 @@ export default function AdminDashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
           <div>
             <h2 className="text-2xl font-extrabold text-[#3a356a] mb-1">Website Traffic</h2>
-            <p className="text-slate-500 text-sm">Unique visitor analytics for the last 12 days</p>
+            <p className="text-slate-500 text-sm">Unique visitor analytics for the last {timeRange === 'week' ? '7 days' : timeRange === 'month' ? '30 days' : '12 months'}</p>
           </div>
           <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden bg-slate-50 p-1">
-            <button className="px-5 py-2 text-slate-600 text-sm font-bold hover:text-[#3a356a] transition-colors rounded-md">Week</button>
-            <button className="px-5 py-2 bg-white text-[#6C63FF] shadow-sm border border-slate-200 rounded-md text-sm font-bold">Month</button>
-            <button className="px-5 py-2 text-slate-600 text-sm font-bold hover:text-[#3a356a] transition-colors rounded-md">Year</button>
+            <button onClick={() => setTimeRange("week")} className={`px-5 py-2 text-sm font-bold rounded-md transition-all ${timeRange === 'week' ? 'bg-white text-[#6C63FF] shadow-sm border border-slate-200' : 'text-slate-600 hover:text-[#3a356a]'}`}>Week</button>
+            <button onClick={() => setTimeRange("month")} className={`px-5 py-2 text-sm font-bold rounded-md transition-all ${timeRange === 'month' ? 'bg-white text-[#6C63FF] shadow-sm border border-slate-200' : 'text-slate-600 hover:text-[#3a356a]'}`}>Month</button>
+            <button onClick={() => setTimeRange("year")} className={`px-5 py-2 text-sm font-bold rounded-md transition-all ${timeRange === 'year' ? 'bg-white text-[#6C63FF] shadow-sm border border-slate-200' : 'text-slate-600 hover:text-[#3a356a]'}`}>Year</button>
           </div>
         </div>
 
         <div className="h-[350px] w-full flex items-center justify-center border-t border-slate-100 pt-8 mt-2">
-          {trafficData.length > 0 ? (
+          {chartData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={trafficData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+              <AreaChart data={chartData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#6C63FF" stopOpacity={0.15}/>
                     <stop offset="95%" stopColor="#6C63FF" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="colorVisitors" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.15}/>
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -136,7 +187,8 @@ export default function AdminDashboard() {
                   itemStyle={{ color: '#3a356a', fontWeight: 800 }}
                   labelStyle={{ color: '#64748b', fontWeight: 600, marginBottom: '4px' }}
                 />
-                <Area type="monotone" dataKey="views" stroke="#6C63FF" strokeWidth={4} fillOpacity={1} fill="url(#colorViews)" />
+                <Area type="monotone" name="Page Views" dataKey="views" stroke="#6C63FF" strokeWidth={4} fillOpacity={1} fill="url(#colorViews)" />
+                <Area type="monotone" name="Unique Visitors" dataKey="visitors" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorVisitors)" />
               </AreaChart>
             </ResponsiveContainer>
           ) : (
