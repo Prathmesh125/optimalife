@@ -106,9 +106,11 @@ export default function GlobalMap() {
 
       <ComposableMap
         projectionConfig={{
-          scale: 140,
-          center: [0, 15]
+          scale: 160,
+          center: [0, 10]
         }}
+        width={800}
+        height={400}
         className="w-full h-full"
       >
         <Geographies geography={geoUrl}>
@@ -136,18 +138,18 @@ export default function GlobalMap() {
           >
             {/* Pulsing ring */}
             <motion.circle
-              r={12}
+              r={14}
               fill={marker.color}
               opacity={0.3}
               animate={{
-                scale: [1, 2.5, 2.5],
-                opacity: [0.6, 0, 0]
+                scale: [1, 2.2, 2.2],
+                opacity: [0.5, 0, 0]
               }}
               transition={{
-                duration: 2,
+                duration: 4,
                 repeat: Infinity,
                 ease: "easeOut",
-                delay: idx * 0.2, // Stagger animations
+                delay: idx * 0.3, // Stagger animations
               }}
             />
             {/* Solid dot */}
