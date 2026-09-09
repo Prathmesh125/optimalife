@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase/client";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -32,14 +32,23 @@ export default function CareersPage() {
   useEffect(() => {
     async function fetchPageData() {
       try {
+        // Fetch page header
         const docRef = doc(db, "pages", "careers");
         const docSnap = await getDoc(docRef);
-        
         if (docSnap.exists()) {
           const sections = docSnap.data().sections || {};
           setHeader(sections.header || {});
-          setJobs(sections.jobs || []);
         }
+        
+        // Fetch jobs from 'careers' collection
+        const jobsQuery = query(collection(db, "careers"), where("active", "==", true));
+        const jobsSnap = await getDocs(jobsQuery);
+        const activeJobs = jobsSnap.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Job[];
+        
+        setJobs(activeJobs);
       } catch (err) {
         console.error("Error fetching careers data:", err);
       } finally {

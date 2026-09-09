@@ -16,6 +16,8 @@ export default function JobEditor({ params }: { params: Promise<{ id: string }> 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [active, setActive] = useState(true);
+  const [location, setLocation] = useState("");
+  const [type, setType] = useState("Full-Time");
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -31,6 +33,8 @@ export default function JobEditor({ params }: { params: Promise<{ id: string }> 
           setTitle(data.title || "");
           setDescription(data.description || "");
           setActive(data.active !== false);
+          setLocation(data.location || "");
+          setType(data.type || "Full-Time");
         } else {
           setMessage("Job not found.");
         }
@@ -55,6 +59,8 @@ export default function JobEditor({ params }: { params: Promise<{ id: string }> 
         title,
         description,
         active,
+        location,
+        type,
         updatedAt: new Date().toISOString()
       };
 
@@ -117,6 +123,29 @@ export default function JobEditor({ params }: { params: Promise<{ id: string }> 
                 <option value="active">Active (Accepting Applications)</option>
                 <option value="closed">Closed</option>
               </select>
+            </div>
+          </div>
+          
+          <div className="flex justify-between items-start mt-4 gap-4">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-slate-700 mb-2">Location</label>
+              <input
+                type="text"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                className="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 text-slate-900"
+                placeholder="e.g. Pune, MH"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-slate-700 mb-2">Employment Type</label>
+              <input
+                type="text"
+                value={type}
+                onChange={(e) => setType(e.target.value)}
+                className="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 text-slate-900"
+                placeholder="e.g. Full-Time, Contract"
+              />
             </div>
           </div>
         </div>
