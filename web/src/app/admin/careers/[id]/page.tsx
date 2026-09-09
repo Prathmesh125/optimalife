@@ -255,10 +255,10 @@ export default function JobEditor({ params }: { params: Promise<{ id: string }> 
                     body: JSON.stringify({ type: "job_description", prompt })
                   });
                   const data = await res.json();
-                  if (data.success && data.content) {
-                    setDescription(data.content);
+                  if (data.text) {
+                    setDescription(data.text);
                   } else {
-                    alert("Error: " + data.error);
+                    alert("Error: " + (data.error || "Unknown error"));
                   }
                 } catch (err: any) {
                   alert("Failed to expand content: " + err.message);
