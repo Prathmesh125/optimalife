@@ -69,9 +69,7 @@ export default function CareersPage() {
     fetchPageData();
   }, []);
 
-    }
-    fetchPageData();
-  }, []);
+
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
