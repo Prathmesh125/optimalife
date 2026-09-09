@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import pdfParse from "pdf-parse";
 import mammoth from "mammoth";
 
 export async function POST(req: Request) {
@@ -24,6 +23,7 @@ export async function POST(req: Request) {
     const fileName = resumeFile.name.toLowerCase();
     
     if (fileName.endsWith('.pdf') || resumeFile.type === 'application/pdf') {
+      const pdfParse = require("pdf-parse");
       const pdfData = await pdfParse(buffer);
       extractedText = pdfData.text;
     } else if (fileName.endsWith('.docx') || resumeFile.type.includes('wordprocessingml')) {
