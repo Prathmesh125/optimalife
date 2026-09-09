@@ -3,9 +3,37 @@
 import { useAuth } from "@/context/AuthContext";
 import { FileText, FileImage, Briefcase, TrendingUp, Users, Eye } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { collection, getCountFromServer } from "firebase/firestore";
+import { db } from "@/lib/firebase/client";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
+  const [metrics, setMetrics] = useState({ pages: 0, blogs: 0, applications: 0 });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchMetrics() {
+      try {
+        const [pagesSnap, blogsSnap, appsSnap] = await Promise.all([
+          getCountFromServer(collection(db, "pages")),
+          getCountFromServer(collection(db, "blog_posts")),
+          getCountFromServer(collection(db, "applications")),
+        ]);
+
+        setMetrics({
+          pages: pagesSnap.data().count,
+          blogs: blogsSnap.data().count,
+          applications: appsSnap.data().count,
+        });
+      } catch (error) {
+        console.error("Error fetching metrics:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchMetrics();
+  }, []);
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -49,7 +77,7 @@ export default function AdminDashboard() {
           </div>
           <h3 className="text-slate-400 font-semibold text-sm uppercase tracking-wider mb-1">Total Pages</h3>
           <div className="flex items-end justify-between">
-            <p className="text-4xl font-black text-slate-800">12</p>
+            <p className="text-4xl font-black text-slate-800">{loading ? "..." : metrics.pages}</p>
             <span className="text-sm font-semibold text-emerald-500 flex items-center">+3% this month</span>
           </div>
         </Link>
@@ -63,7 +91,7 @@ export default function AdminDashboard() {
           </div>
           <h3 className="text-slate-400 font-semibold text-sm uppercase tracking-wider mb-1">Published Blogs</h3>
           <div className="flex items-end justify-between">
-            <p className="text-4xl font-black text-slate-800">48</p>
+            <p className="text-4xl font-black text-slate-800">{loading ? "..." : metrics.blogs}</p>
             <span className="text-sm font-semibold text-emerald-500 flex items-center">+12% this month</span>
           </div>
         </Link>
@@ -77,7 +105,7 @@ export default function AdminDashboard() {
           </div>
           <h3 className="text-slate-400 font-semibold text-sm uppercase tracking-wider mb-1">Job Applications</h3>
           <div className="flex items-end justify-between">
-            <p className="text-4xl font-black text-slate-800">15</p>
+            <p className="text-4xl font-black text-slate-800">{loading ? "..." : metrics.applications}</p>
             <span className="text-sm font-semibold text-orange-500 flex items-center">New this week</span>
           </div>
         </Link>
