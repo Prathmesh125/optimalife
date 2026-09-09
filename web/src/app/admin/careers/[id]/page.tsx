@@ -248,11 +248,11 @@ export default function JobEditor({ params }: { params: Promise<{ id: string }> 
               onClick={async () => {
                 setGeneratingDesc(true);
                 try {
-                  const payload = description.trim() ? description : title;
+                  const prompt = description.trim() ? description : title;
                   const res = await fetch("/api/ai", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ type: "job_description", payload })
+                    body: JSON.stringify({ type: "job_description", prompt })
                   });
                   const data = await res.json();
                   if (data.success && data.content) {
