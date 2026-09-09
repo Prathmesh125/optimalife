@@ -5,7 +5,7 @@ import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase/client";
 import { logAdminAction } from "@/lib/logger";
 import { useRouter } from "next/navigation";
-import { Save, ArrowLeft, Image as ImageIcon, Calendar, CheckCircle2, FileImage, Trash2, Loader2, Type, Heading, ChevronUp, ChevronDown, Plus, X } from "lucide-react";
+import { Save, ArrowLeft, Image as ImageIcon, Calendar, CheckCircle2, FileImage, Trash2, Loader2, Type, Heading, ChevronUp, ChevronDown, Plus, X, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 interface BlogImage {
@@ -38,6 +38,38 @@ export default function BlogEditor({ params }: { params: Promise<{ slug: string 
 
   const [activeMenuIndex, setActiveMenuIndex] = useState<number | null>(null);
   const [uploadingBlockId, setUploadingBlockId] = useState<string | null>(null);
+
+  const [isGeneratingTitle, setIsGeneratingTitle] = useState(false);
+  const [generatingBlockId, setGeneratingBlockId] = useState<string | null>(null);
+
+  const handleGenerateAI = async (type: "title" | "content", promptText: string, blockIdx?: number) => {
+    if (!promptText.trim()) return;
+    
+    if (type === "title") setIsGeneratingTitle(true);
+    if (type === "content" && blockIdx !== undefined) setGeneratingBlockId(blocks[blockIdx].id);
+
+    try {
+      const res = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: promptText, type }),
+      });
+      const data = await res.json();
+      
+      if (!res.ok) throw new Error(data.error);
+
+      if (type === "title") {
+        setTitle(data.text);
+      } else if (type === "content" && blockIdx !== undefined) {
+        updateBlock(blockIdx, { content: data.text });
+      }
+    } catch (error: any) {
+      alert("AI Generation failed: " + error.message);
+    } finally {
+      setIsGeneratingTitle(false);
+      setGeneratingBlockId(null);
+    }
+  };
 
   useEffect(() => {
     if (isNew) return;
@@ -216,7 +248,7 @@ export default function BlogEditor({ params }: { params: Promise<{ slug: string 
       <form onSubmit={handleSave} className="space-y-6">
         
         {/* Title */}
-        <div className="bg-white p-8 rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.02)] border border-slate-100">
+        <div className="bg-white p-8 rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.02)] border border-slate-100 flex items-center justify-between group">
           <input
             type="text"
             value={title}
@@ -225,6 +257,16 @@ export default function BlogEditor({ params }: { params: Promise<{ slug: string 
             required
             placeholder="Post Title..."
           />
+          <button
+            type="button"
+            onClick={() => handleGenerateAI("title", title)}
+            disabled={!title || isGeneratingTitle}
+            className="ml-4 flex-shrink-0 flex items-center space-x-2 bg-gradient-to-r from-[#6C63FF] to-purple-600 text-white px-4 py-2.5 rounded-xl font-bold shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0 opacity-0 group-hover:opacity-100 focus:opacity-100"
+            title="AI Title Optimization"
+          >
+            {isGeneratingTitle ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
+            <span className="hidden sm:inline">Optimize Title</span>
+          </button>
         </div>
 
         {/* Content Blocks Editor */}
@@ -262,17 +304,28 @@ export default function BlogEditor({ params }: { params: Promise<{ slug: string 
                   )}
 
                   {block.type === "text" && (
-                    <textarea
-                      value={block.content || ""}
-                      onChange={(e) => updateBlock(idx, { content: e.target.value })}
-                      rows={Math.max(3, (block.content?.split("\n").length || 1))}
-                      className="w-full bg-transparent border-none focus:ring-0 outline-none font-sans text-lg text-slate-700 leading-loose placeholder-slate-300 resize-none overflow-hidden"
-                      placeholder="Write your paragraph here..."
-                      onInput={(e) => {
-                        e.currentTarget.style.height = 'auto';
-                        e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px';
-                      }}
-                    />
+                    <div className="relative group/text">
+                      <textarea
+                        value={block.content || ""}
+                        onChange={(e) => updateBlock(idx, { content: e.target.value })}
+                        rows={Math.max(3, (block.content?.split("\n").length || 1))}
+                        className={`w-full bg-transparent border-none focus:ring-0 outline-none font-sans text-lg text-slate-700 leading-loose placeholder-slate-300 resize-none overflow-hidden transition-opacity ${generatingBlockId === block.id ? 'opacity-50' : 'opacity-100'}`}
+                        placeholder="Write your paragraph or rough keywords here..."
+                        onInput={(e) => {
+                          e.currentTarget.style.height = 'auto';
+                          e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px';
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleGenerateAI("content", block.content || "", idx)}
+                        disabled={!block.content || generatingBlockId === block.id}
+                        className="absolute bottom-2 right-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white p-2 rounded-lg font-bold shadow-sm hover:shadow-md transition-all opacity-0 group-hover/text:opacity-100 disabled:opacity-50"
+                        title="AI Expand Content"
+                      >
+                        {generatingBlockId === block.id ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+                      </button>
+                    </div>
                   )}
 
                   {block.type === "image" && (
