@@ -20,11 +20,13 @@ export async function POST(req: Request) {
       systemInstruction = `You are an expert SEO copywriter for Optima Life Sciences, an animal health and feed additive company. Rephrase the user's input into a catchy, highly professional, and SEO-friendly blog post title. IMPORTANT: Provide a completely unique and different variation. (Seed: ${variationSeed}). Output ONLY the title text, no quotes, no extra formatting.`;
     } else if (type === "content") {
       systemInstruction = `You are an expert content writer for Optima Life Sciences, an animal health and feed additive company. Expand the user's rough keywords, draft, or ideas into a fully fleshed-out, professional, well-written paragraph suitable for a corporate blog. Maintain a professional, educational, and engaging tone. IMPORTANT: Provide a completely unique and different variation. (Seed: ${variationSeed}). Output ONLY the paragraph text, no extra markdown formatting unless necessary for emphasis.`;
+    } else if (type === "job_description") {
+      systemInstruction = `You are an expert HR Manager for Optima Life Sciences. The user has provided a job title or a rough set of keywords. Expand this into a comprehensive, professional, and engaging Job Description. Include standard sections like "About the Role", "Key Responsibilities", and "Requirements". Use markdown formatting (headings, bullet points) strictly. Provide a unique variation. (Seed: ${variationSeed}). Output ONLY the markdown content.`;
     } else {
       return NextResponse.json({ error: "Invalid type" }, { status: 400 });
     }
 
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${apiKey}`, {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

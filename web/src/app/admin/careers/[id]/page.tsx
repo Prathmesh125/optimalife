@@ -24,6 +24,7 @@ export default function JobEditor({ params }: { params: Promise<{ id: string }> 
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [generatingForm, setGeneratingForm] = useState(false);
+  const [generatingDesc, setGeneratingDesc] = useState(false);
   
   const [useTemplate, setUseTemplate] = useState<"standard" | "custom">("custom");
   const [formFields, setFormFields] = useState<any[]>([]);
@@ -230,19 +231,55 @@ export default function JobEditor({ params }: { params: Promise<{ id: string }> 
           </div>
         )}
 
-        {/* Content Block */}
+        {/* Description Section */}
         <div className="bg-white p-8 rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.02)] border border-slate-100">
-          <div className="flex items-center space-x-2 mb-2">
-            <Briefcase className="text-[#3a356a]" size={20} />
-            <h3 className="text-xl font-extrabold text-[#3a356a]">Job Description</h3>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <div className="flex items-center space-x-2 mb-2">
+                <FileText className="text-[#3a356a]" size={20} />
+                <h3 className="text-xl font-extrabold text-[#3a356a]">Job Description</h3>
+              </div>
+              <p className="text-sm text-slate-500 font-medium">Supports standard markdown formatting for requirements and responsibilities.</p>
+            </div>
+            
+            <button
+              type="button"
+              disabled={generatingDesc || (!title && !description)}
+              onClick={async () => {
+                setGeneratingDesc(true);
+                try {
+                  const payload = description.trim() ? description : title;
+                  const res = await fetch("/api/ai", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ type: "job_description", payload })
+                  });
+                  const data = await res.json();
+                  if (data.success && data.content) {
+                    setDescription(data.content);
+                  } else {
+                    alert("Error: " + data.error);
+                  }
+                } catch (err: any) {
+                  alert("Failed to expand content: " + err.message);
+                } finally {
+                  setGeneratingDesc(false);
+                }
+              }}
+              className="flex items-center space-x-2 bg-gradient-to-r from-[#6C63FF]/10 to-[#8f88ff]/10 hover:from-[#6C63FF]/20 hover:to-[#8f88ff]/20 text-[#6C63FF] px-4 py-2 rounded-xl transition-all font-bold disabled:opacity-50 border border-[#6C63FF]/20"
+              title="Expand with AI"
+            >
+              {generatingDesc ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
+              <span className="hidden sm:inline text-sm">{generatingDesc ? "Writing..." : "AI Auto-Write"}</span>
+            </button>
           </div>
-          <p className="text-sm text-slate-500 mb-6 font-medium">Supports standard markdown formatting for requirements and responsibilities.</p>
+          
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={15}
             className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-[#6C63FF]/30 focus:border-[#6C63FF] outline-none font-mono text-sm text-slate-800 shadow-sm leading-relaxed"
-            placeholder="Write job description here..."
+            placeholder="Write job description here, or just type a title above and click 'AI Auto-Write'..."
             required
           />
         </div>
