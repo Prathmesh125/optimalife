@@ -580,7 +580,7 @@ export default function PageEditor({ params }: { params: Promise<{ slug: string 
                   type="button"
                   onClick={() => {
                     const newJobs = [...(sections.jobs || []), { id: `job-${Date.now()}`, title: "New Position", location: "Pune, MH", type: "Full-Time", description: "" }];
-                    updateField("sections", { ...sections, jobs: newJobs });
+                    setSections({ ...sections, jobs: newJobs });
                   }}
                   className="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors"
                 >
@@ -595,7 +595,7 @@ export default function PageEditor({ params }: { params: Promise<{ slug: string 
                       type="button"
                       onClick={() => {
                         const newJobs = sections.jobs.filter((_: any, i: number) => i !== idx);
-                        updateField("sections", { ...sections, jobs: newJobs });
+                        setSections({ ...sections, jobs: newJobs });
                       }}
                       className="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors"
                       title="Remove Job"
