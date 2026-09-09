@@ -7,7 +7,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { submitApplication } from "@/app/actions/applyJob";
 import ReactMarkdown from "react-markdown";
-import { Briefcase, MapPin, UploadCloud, CheckCircle } from "lucide-react";
+import { Briefcase, MapPin, UploadCloud, CheckCircle, FileText } from "lucide-react";
 
 interface Job {
   id: string;
@@ -26,6 +26,7 @@ export default function CareersPage() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [fileName, setFileName] = useState("");
 
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -72,6 +73,7 @@ export default function CareersPage() {
     
     if (result.success) {
       setSuccess(true);
+      setFileName("");
       formRef.current.reset();
       setTimeout(() => {
         setSelectedJob(null);
@@ -177,10 +179,27 @@ export default function CareersPage() {
                             <div className="flex items-center justify-center w-full">
                               <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 border-dashed rounded-xl cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
                                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                  <UploadCloud className="w-8 h-8 text-slate-400 mb-2" />
-                                  <p className="text-sm text-slate-500 font-medium">Click to upload or drag and drop</p>
+                                  {fileName ? (
+                                    <>
+                                      <FileText className="w-8 h-8 text-[var(--color-primary)] mb-2" />
+                                      <p className="text-sm text-slate-700 font-semibold">{fileName}</p>
+                                      <p className="text-xs text-slate-500 mt-1">Click to change file</p>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <UploadCloud className="w-8 h-8 text-slate-400 mb-2" />
+                                      <p className="text-sm text-slate-500 font-medium">Click to upload or drag and drop</p>
+                                    </>
+                                  )}
                                 </div>
-                                <input type="file" name="resume" accept=".pdf,.doc,.docx" required className="hidden" />
+                                <input 
+                                  type="file" 
+                                  name="resume" 
+                                  accept=".pdf,.doc,.docx" 
+                                  required 
+                                  className="hidden" 
+                                  onChange={(e) => setFileName(e.target.files?.[0]?.name || "")}
+                                />
                               </label>
                             </div>
                           </div>
