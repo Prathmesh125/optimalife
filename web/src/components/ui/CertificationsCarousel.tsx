@@ -4,7 +4,7 @@ import React, { useCallback } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-export default function CertificationsCarousel({ certs }: { certs: { url: string, name: string }[] }) {
+export default function CertificationsCarousel({ certs }: { certs: { image: string, name: string }[] }) {
   // Using slidesToScroll: 1 and align: start for 4 items per row
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, align: 'start', dragFree: true });
 
@@ -44,7 +44,7 @@ export default function CertificationsCarousel({ certs }: { certs: { url: string
                     {/* Image Container */}
                     <div className="w-full bg-slate-50 p-6 flex-1 flex items-center justify-center border-b border-slate-100 min-h-[250px]">
                       <img 
-                        src={cert.url} 
+                        src={cert.image} 
                         alt={cert.name}
                         className="max-h-[300px] w-auto object-contain drop-shadow-md group-hover:scale-105 transition-transform duration-500"
                       />
