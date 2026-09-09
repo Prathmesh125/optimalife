@@ -6,6 +6,7 @@ import { ArrowRight, Phone, Shield, Activity, Beaker } from "lucide-react";
 import HeroCarousel from "@/components/ui/HeroCarousel";
 import CertificationsCarousel from "@/components/ui/CertificationsCarousel";
 import GlobalMap from "@/components/ui/GlobalMap";
+import AnimatedStat from "@/components/ui/AnimatedStat";
 
 async function getHomeData() {
   const doc = await adminDb.collection("pages").doc("home").get();
@@ -143,9 +144,7 @@ export default async function Home() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-12 text-center divide-x divide-slate-100">
                 {stats.map((stat: any, i: number) => (
                   <div key={i} className="flex flex-col items-center justify-center p-4">
-                    <div className="text-5xl lg:text-7xl font-black text-[var(--color-primary)] tracking-tight mb-4">
-                      {stat.value}
-                    </div>
+                    <AnimatedStat value={stat.value} />
                     <div className="text-slate-900 font-bold uppercase tracking-widest text-sm">
                       {stat.label}
                     </div>
