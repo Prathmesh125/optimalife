@@ -42,12 +42,29 @@ export default function CareersPage() {
         }
         
         // Fetch jobs from 'careers' collection
-        const jobsQuery = query(collection(db, "careers"), where("active", "==", true));
+        const jobsQuery = query(collection(db, "careers")); // Fetch all to filter client-side for dynamic scheduling
         const jobsSnap = await getDocs(jobsQuery);
+        const now = new Date();
+        
         const activeJobs = jobsSnap.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
-        })) as Job[];
+        })).filter((job: any) => {
+          // Dynamic status logic
+          if (job.status === 'closed') return false;
+          if (job.status === 'active') return true;
+          
+          if (job.status === 'scheduled_active') {
+            return job.scheduledDate && now >= new Date(job.scheduledDate);
+          }
+          
+          if (job.status === 'scheduled_close') {
+            return job.scheduledDate && now < new Date(job.scheduledDate);
+          }
+          
+          // Legacy fallback for old data without 'status' field
+          return job.active === true;
+        }) as Job[];
         
         setJobs(activeJobs);
       } catch (err) {
