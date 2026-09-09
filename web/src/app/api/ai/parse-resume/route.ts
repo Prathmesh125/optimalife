@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import pdfParse from "pdf-parse";
+import mammoth from "mammoth";
 
 export async function POST(req: Request) {
   try {
@@ -15,21 +17,35 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Gemini API Key is not configured" }, { status: 500 });
     }
 
-    // Convert file to base64
-    const buffer = await resumeFile.arrayBuffer();
-    const base64Data = Buffer.from(buffer).toString('base64');
+    // Extract text from the file buffer based on type
+    const buffer = Buffer.from(await resumeFile.arrayBuffer());
+    let extractedText = "";
     
-    // Fallback to pdf MIME if empty (sometimes happens with File objects)
-    const mimeType = resumeFile.type || "application/pdf"; 
+    const fileName = resumeFile.name.toLowerCase();
+    
+    if (fileName.endsWith('.pdf') || resumeFile.type === 'application/pdf') {
+      const pdfData = await pdfParse(buffer);
+      extractedText = pdfData.text;
+    } else if (fileName.endsWith('.docx') || resumeFile.type.includes('wordprocessingml')) {
+      const docxData = await mammoth.extractRawText({ buffer });
+      extractedText = docxData.value;
+    } else {
+      // Fallback for simple txt or other types
+      extractedText = buffer.toString('utf-8');
+    }
+
+    if (!extractedText || extractedText.trim().length === 0) {
+      return NextResponse.json({ error: "Could not extract text from the file. Please try a different format." }, { status: 400 });
+    }
 
     const systemInstruction = `You are a highly accurate Resume Parsing AI. 
-The user is providing a resume file (PDF or DOC) and a JSON schema describing the form fields required for a job application.
+The user is providing the plain text extracted from a resume and a JSON schema describing the form fields required for a job application.
 Your task is to extract information from the resume and fill out the fields described in the schema.
 You MUST output ONLY a valid raw JSON object (no markdown formatting, no \`\`\`json blocks) where keys are the field IDs/names from the schema, and values are the extracted data.
 If a field's information cannot be found in the resume, leave its value as an empty string ("").
 For dropdowns/select fields, try to match the closest option if options are provided.`;
 
-    const prompt = `Extract data for the following schema: ${formSchemaStr}`;
+    const prompt = `Extract data for the following schema: ${formSchemaStr}\n\nRESUME TEXT:\n${extractedText.substring(0, 25000)}`;
 
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${apiKey}`, {
       method: "POST",
@@ -43,13 +59,7 @@ For dropdowns/select fields, try to match the closest option if options are prov
         contents: [
           {
             parts: [
-              { text: prompt },
-              {
-                inline_data: {
-                  mime_type: mimeType,
-                  data: base64Data
-                }
-              }
+              { text: prompt }
             ]
           }
         ],

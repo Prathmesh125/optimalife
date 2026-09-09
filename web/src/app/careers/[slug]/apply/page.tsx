@@ -91,10 +91,11 @@ export default function ApplyPage({ params }: { params: Promise<{ slug: string }
         setFormData(prev => ({ ...prev, ...result.data }));
       } else {
         console.error("Parse Error:", result.error);
-        // We don't block the user, just log it. They can manually type.
+        alert("AI Parsing Warning: " + (result.error || "Failed to parse resume automatically. Please fill the fields manually."));
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("AI Parse failed:", err);
+      alert("AI Parsing Warning: Failed to parse resume automatically. Please fill the fields manually.");
     } finally {
       setParsing(false);
     }
