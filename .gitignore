@@ -1,0 +1,14 @@
+# Ignore sensitive credentials
+optimalife-83bce-firebase-adminsdk-fbsvc-7bfe119ad5.json
+firebase_credentials.js
+cloudflare_credentials.txt
+
+# Mac OS
+.DS_Store
+
+# Ignore the python script artifacts/cache
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
