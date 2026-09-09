@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+:root {
+  /* Ultra-Professional Scientific Palette */
+  --color-base: #ffffff;
+  --color-base-subtle: #f8fafc;
+  
+  /* Primary: Royal Blue */
+  --color-primary: #2563eb;
+  --color-primary-light: #3b82f6;
+  --color-primary-dark: #1d4ed8;
+  
+  /* Accent: Emerald Green */
+  --color-secondary: #10b981;
+  --color-secondary-light: #34d399;
+  --color-secondary-dark: #059669;
+
+  /* Typography Colors */
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #94a3b8;
+}
+
+@theme inline {
+  --color-background: var(--color-base);
+  --color-foreground: var(--color-text-primary);
+  
+  --color-brand-primary: var(--color-primary);
+  --color-brand-secondary: var(--color-secondary);
+  --color-brand-muted: var(--color-text-muted);
+
+  --font-sans: "Inter", sans-serif;
+  --font-serif: "Outfit", sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-serif);
+    color: var(--color-text-primary);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  p {
+    max-width: 75ch;
+  }
+}
+
+.hover-reveal {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+}
+.hover-reveal:hover {
+  transform: translateY(-4px);
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+  100% { transform: translateY(0px); }
+}
+
+/* Embla Carousel Base Styles */
+.embla {
+  overflow: hidden;
+}
+.embla__container {
+  display: flex;
+}
+
