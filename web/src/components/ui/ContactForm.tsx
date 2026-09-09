@@ -6,7 +6,7 @@ import { db } from "@/lib/firebase/client";
 import { Send, CheckCircle2 } from "lucide-react";
 
 export default function ContactForm() {
-  const [formData, setFormData] = useState({ name: "", email: "", message: "" });
+  const [formData, setFormData] = useState({ name: "", email: "", phone: "", message: "" });
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -22,13 +22,14 @@ export default function ContactForm() {
       await addDoc(collection(db, "inquiries"), {
         name: formData.name,
         email: formData.email,
+        phone: formData.phone,
         message: formData.message,
         status: "New",
         createdAt: serverTimestamp()
       });
       
       setSuccess(true);
-      setFormData({ name: "", email: "", message: "" });
+      setFormData({ name: "", email: "", phone: "", message: "" });
       
       // Hide success message after 5 seconds
       setTimeout(() => {
@@ -73,6 +74,16 @@ export default function ContactForm() {
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[var(--color-primary-light)] focus:border-[var(--color-primary-light)] outline-none transition-colors text-slate-900"
             placeholder="John Doe"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">Mobile Number</label>
+          <input
+            type="tel"
+            value={formData.phone}
+            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[var(--color-primary-light)] focus:border-[var(--color-primary-light)] outline-none transition-colors text-slate-900"
+            placeholder="+91 98765 43210"
           />
         </div>
         <div>

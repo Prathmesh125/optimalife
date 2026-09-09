@@ -9,6 +9,7 @@ interface Inquiry {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   message: string;
   createdAt: any;
   status: string;
@@ -76,14 +77,24 @@ export default function InquiriesPage() {
                 {inquiries.map((inquiry) => (
                   <tr key={inquiry.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="p-4 pl-6 align-top">
-                      <div className="font-bold text-slate-800">{inquiry.name || "Anonymous"}</div>
-                      <div className="flex items-center text-sm text-slate-500 mt-1 mb-2">
-                        <Mail size={14} className="mr-1.5 text-slate-400" />
-                        <a href={`mailto:${inquiry.email}`} className="hover:text-[#6C63FF] hover:underline">
-                          {inquiry.email}
-                        </a>
+                      <div className="font-bold text-slate-800 mb-2">{inquiry.name || "Anonymous"}</div>
+                      <div className="flex flex-col space-y-1.5 text-sm text-slate-500 mb-3">
+                        <div className="flex items-center">
+                          <Mail size={14} className="mr-2 text-slate-400" />
+                          <a href={`mailto:${inquiry.email}`} className="hover:text-[#6C63FF] hover:underline truncate max-w-[200px]" title={inquiry.email}>
+                            {inquiry.email}
+                          </a>
+                        </div>
+                        {inquiry.phone && (
+                          <div className="flex items-center">
+                            <Phone size={14} className="mr-2 text-slate-400" />
+                            <a href={`tel:${inquiry.phone}`} className="hover:text-[#6C63FF] hover:underline">
+                              {inquiry.phone}
+                            </a>
+                          </div>
+                        )}
                       </div>
-                      <div className="text-[10px] text-emerald-500 font-bold uppercase tracking-widest mt-2 border border-emerald-200 bg-emerald-50 inline-block px-2 py-0.5 rounded-md">
+                      <div className="text-[10px] text-emerald-500 font-bold uppercase tracking-widest border border-emerald-200 bg-emerald-50 inline-block px-2 py-0.5 rounded-md">
                         {inquiry.status || "New"}
                       </div>
                     </td>
