@@ -35,13 +35,13 @@ export default function JobDetailPage({ params }: { params: Promise<{ slug: stri
         const docSnap = await getDoc(docRef);
         
         if (docSnap.exists()) {
-          const data = docSnap.data() as Job;
+          const data = docSnap.data();
           // Simple client side validation that it's active
           if (data.status === 'closed' || (data.status === undefined && data.active === false)) {
             router.push("/careers");
             return;
           }
-          setJob({ id: docSnap.id, ...data });
+          setJob({ id: docSnap.id, ...data } as Job);
         } else {
           router.push("/careers");
         }
