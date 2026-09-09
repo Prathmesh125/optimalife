@@ -271,7 +271,11 @@ export default function ApplyPage({ params }: { params: Promise<{ slug: string }
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {job.formFields?.map((field: any) => (
-                        <div key={field.id} className={field.type === "textarea" ? "col-span-1 md:col-span-2" : "col-span-1"}>
+                        <div key={field.id} className={
+                          field.type === "textarea" || field.type === "education" || field.type === "experience" 
+                            ? "col-span-1 md:col-span-2" 
+                            : "col-span-1"
+                        }>
                           <label className="block text-sm font-bold text-slate-700 mb-2">
                             {field.label} {field.required && <span className="text-red-500">*</span>}
                           </label>
@@ -307,6 +311,18 @@ export default function ApplyPage({ params }: { params: Promise<{ slug: string }
                               />
                               <span className="text-slate-700 font-medium">{field.label}</span>
                             </label>
+                          ) : field.type === "education" || field.type === "experience" ? (
+                            <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+                              <p className="text-sm text-slate-500 mb-4 font-medium">Please provide your {field.label.toLowerCase()}. You can type it or let our AI parse it from your resume.</p>
+                              <textarea 
+                                required={field.required}
+                                value={formData[field.id] || ""}
+                                onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                                rows={6}
+                                placeholder={`Enter your ${field.label.toLowerCase()} details here...`}
+                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-[#6C63FF]/30 outline-none transition-all font-medium text-slate-800"
+                              />
+                            </div>
                           ) : (
                             <input 
                               type={field.type} 

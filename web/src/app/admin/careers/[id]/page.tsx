@@ -24,7 +24,7 @@ export default function JobEditor({ params }: { params: Promise<{ id: string }> 
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   
-  const [useTemplate, setUseTemplate] = useState<"standard" | "custom">("standard");
+  const [useTemplate, setUseTemplate] = useState<"standard" | "custom">("custom");
   const [formFields, setFormFields] = useState<any[]>([]);
 
   useEffect(() => {
@@ -50,7 +50,7 @@ export default function JobEditor({ params }: { params: Promise<{ id: string }> 
             setScheduledDate(new Date(data.scheduledDate).toISOString().slice(0, 16));
           }
           
-          setUseTemplate(data.useTemplate || "standard");
+          setUseTemplate("custom");
           setFormFields(data.formFields || []);
         } else {
           setMessage("Job not found.");
@@ -89,8 +89,8 @@ export default function JobEditor({ params }: { params: Promise<{ id: string }> 
         active: status === "active" || status === "scheduled_close", // Legacy fallback
         location,
         type,
-        useTemplate,
-        formFields: useTemplate === "custom" ? formFields : [],
+        useTemplate: "custom",
+        formFields: formFields,
         updatedAt: new Date().toISOString()
       };
 
@@ -257,131 +257,154 @@ export default function JobEditor({ params }: { params: Promise<{ id: string }> 
           <div className="flex items-center space-x-4 mb-8 bg-slate-50 p-2 rounded-xl border border-slate-200">
             <button
               type="button"
-              onClick={() => setUseTemplate("standard")}
-              className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm transition-all ${useTemplate === "standard" ? "bg-white shadow-sm border border-slate-200 text-[#6C63FF]" : "text-slate-500 hover:text-slate-700"}`}
+              onClick={() => {
+                const kekaTemplate = [
+                  { id: 'first_name', label: 'First Name', type: 'text', required: true },
+                  { id: 'middle_name', label: 'Middle Name', type: 'text', required: false },
+                  { id: 'last_name', label: 'Last Name', type: 'text', required: true },
+                  { id: 'email', label: 'Email', type: 'email', required: true },
+                  { id: 'phone', label: 'Mobile Phone', type: 'tel', required: true },
+                  { id: 'dob', label: 'Date of Birth', type: 'date', required: true },
+                  { id: 'gender', label: 'Gender', type: 'select', options: 'Male, Female, Other', required: true },
+                  { id: 'address', label: 'Present Address', type: 'textarea', required: true },
+                  { id: 'nationality', label: 'Nationality', type: 'select', options: 'Indian, Other', required: true },
+                  { id: 'education', label: 'Education Details', type: 'education', required: true },
+                  { id: 'experience', label: 'Experience Details', type: 'experience', required: true },
+                  { id: 'current_location', label: 'Current Location', type: 'text', required: true },
+                  { id: 'preferred_location', label: 'Preferred Location', type: 'text', required: true },
+                  { id: 'reason_leaving', label: 'Reason of Leaving', type: 'text', required: true },
+                  { id: 'notice_period', label: 'Notice Period', type: 'text', required: true },
+                  { id: 'join_days', label: 'Available To Join (in days)', type: 'number', required: true },
+                  { id: 'skills', label: 'Skills', type: 'textarea', required: false },
+                  { id: 'hobbies', label: 'Hobbies', type: 'text', required: true },
+                  { id: 'current_salary', label: 'Current Salary (INR)', type: 'number', required: true },
+                  { id: 'expected_salary', label: 'Expected Salary (INR)', type: 'number', required: true },
+                  { id: 'ref_1', label: 'Reference from current employer (Name & Contact)', type: 'textarea', required: true },
+                  { id: 'ref_2', label: 'Reference from previous employer (Name & Contact)', type: 'textarea', required: true }
+                ];
+                if (formFields.length === 0 || confirm("This will replace your current fields. Continue?")) {
+                  setFormFields(kekaTemplate);
+                }
+              }}
+              className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm transition-all text-slate-500 hover:text-[#6C63FF] hover:bg-white hover:shadow-sm border border-transparent`}
             >
-              Use Standard Template
+              Load Standard Keka Template
             </button>
             <button
               type="button"
-              onClick={() => setUseTemplate("custom")}
-              className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm transition-all ${useTemplate === "custom" ? "bg-white shadow-sm border border-slate-200 text-[#6C63FF]" : "text-slate-500 hover:text-slate-700"}`}
+              onClick={() => {
+                if (formFields.length === 0 || confirm("This will clear your current fields. Continue?")) {
+                  setFormFields([]);
+                }
+              }}
+              className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm transition-all text-slate-500 hover:text-red-500 hover:bg-white hover:shadow-sm border border-transparent`}
             >
-              Create Custom Form
+              Clear All Fields
             </button>
           </div>
 
-          {useTemplate === "standard" ? (
-            <div className="bg-slate-50 border border-slate-200 border-dashed rounded-2xl p-6 text-center">
-              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-slate-100">
-                <CheckSquare className="text-emerald-500" size={32} />
-              </div>
-              <h4 className="text-lg font-bold text-slate-800 mb-2">Standard Application Form</h4>
-              <p className="text-slate-500 text-sm max-w-md mx-auto leading-relaxed">
-                Applicants will be asked for their <strong>First Name, Last Name, Email, Phone, and Resume (PDF/DOC)</strong>. Our AI will automatically parse their resume to save them time.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {formFields.map((field, index) => (
-                <div key={field.id} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm relative group hover:border-[#6C63FF]/30 transition-colors">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 cursor-move text-slate-300 hover:text-slate-500 transition-all">
-                    <GripVertical size={20} />
-                  </div>
-                  
-                  <div className="flex flex-col md:flex-row gap-4 ml-6">
-                    <div className="flex-1">
-                      <label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Field Label</label>
-                      <input
-                        type="text"
-                        value={field.label}
-                        onChange={(e) => {
-                          const newFields = [...formFields];
-                          newFields[index].label = e.target.value;
-                          setFormFields(newFields);
-                        }}
-                        className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-[#6C63FF]/30 focus:border-[#6C63FF] outline-none font-medium text-slate-800"
-                        placeholder="e.g. Years of Experience"
-                        required
-                      />
-                    </div>
-                    <div className="w-full md:w-48">
-                      <label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Field Type</label>
-                      <select
-                        value={field.type}
-                        onChange={(e) => {
-                          const newFields = [...formFields];
-                          newFields[index].type = e.target.value;
-                          setFormFields(newFields);
-                        }}
-                        className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-[#6C63FF]/30 focus:border-[#6C63FF] outline-none font-medium text-slate-800 cursor-pointer"
-                      >
-                        <option value="text">Short Text</option>
-                        <option value="textarea">Long Text</option>
-                        <option value="email">Email</option>
-                        <option value="number">Number</option>
-                        <option value="tel">Phone</option>
-                        <option value="select">Dropdown</option>
-                        <option value="checkbox">Checkbox (Yes/No)</option>
-                        <option value="file">File Upload (Resume)</option>
-                      </select>
-                    </div>
-                    <div className="flex items-center space-x-4 pt-5">
-                      <label className="flex items-center space-x-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={field.required}
-                          onChange={(e) => {
-                            const newFields = [...formFields];
-                            newFields[index].required = e.target.checked;
-                            setFormFields(newFields);
-                          }}
-                          className="w-5 h-5 rounded border-slate-300 text-[#6C63FF] focus:ring-[#6C63FF]"
-                        />
-                        <span className="text-sm font-bold text-slate-600">Required</span>
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFormFields(formFields.filter((_, i) => i !== index));
-                        }}
-                        className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Remove Field"
-                      >
-                        <Trash2 size={20} />
-                      </button>
-                    </div>
-                  </div>
-                  
-                  {field.type === "select" && (
-                    <div className="mt-4 ml-6 pl-4 border-l-2 border-slate-100">
-                      <label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Dropdown Options (Comma Separated)</label>
-                      <input
-                        type="text"
-                        value={field.options || ""}
-                        onChange={(e) => {
-                          const newFields = [...formFields];
-                          newFields[index].options = e.target.value;
-                          setFormFields(newFields);
-                        }}
-                        className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-[#6C63FF]/30 focus:border-[#6C63FF] outline-none font-medium text-slate-800"
-                        placeholder="e.g. 1-3 Years, 3-5 Years, 5+ Years"
-                      />
-                    </div>
-                  )}
+          <div className="space-y-6">
+            {formFields.map((field, index) => (
+              <div key={field.id} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm relative group hover:border-[#6C63FF]/30 transition-colors">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 cursor-move text-slate-300 hover:text-slate-500 transition-all">
+                  <GripVertical size={20} />
                 </div>
-              ))}
+                
+                <div className="flex flex-col md:flex-row gap-4 ml-6">
+                  <div className="flex-1">
+                    <label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Field Label</label>
+                    <input
+                      type="text"
+                      value={field.label}
+                      onChange={(e) => {
+                        const newFields = [...formFields];
+                        newFields[index].label = e.target.value;
+                        setFormFields(newFields);
+                      }}
+                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-[#6C63FF]/30 focus:border-[#6C63FF] outline-none font-medium text-slate-800"
+                      placeholder="e.g. Years of Experience"
+                      required
+                    />
+                  </div>
+                  <div className="w-full md:w-56">
+                    <label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Field Type</label>
+                    <select
+                      value={field.type}
+                      onChange={(e) => {
+                        const newFields = [...formFields];
+                        newFields[index].type = e.target.value;
+                        setFormFields(newFields);
+                      }}
+                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-[#6C63FF]/30 focus:border-[#6C63FF] outline-none font-medium text-slate-800 cursor-pointer"
+                    >
+                      <option value="text">Short Text</option>
+                      <option value="textarea">Long Text</option>
+                      <option value="email">Email</option>
+                      <option value="number">Number</option>
+                      <option value="tel">Phone</option>
+                      <option value="date">Date</option>
+                      <option value="select">Dropdown</option>
+                      <option value="checkbox">Checkbox (Yes/No)</option>
+                      <option value="file">File Upload (Resume)</option>
+                      <option value="education">Education Block (Complex)</option>
+                      <option value="experience">Experience Block (Complex)</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center space-x-4 pt-5">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={field.required}
+                        onChange={(e) => {
+                          const newFields = [...formFields];
+                          newFields[index].required = e.target.checked;
+                          setFormFields(newFields);
+                        }}
+                        className="w-5 h-5 rounded border-slate-300 text-[#6C63FF] focus:ring-[#6C63FF]"
+                      />
+                      <span className="text-sm font-bold text-slate-600">Required</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormFields(formFields.filter((_, i) => i !== index));
+                      }}
+                      className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Remove Field"
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                  </div>
+                </div>
+                
+                {field.type === "select" && (
+                  <div className="mt-4 ml-6 pl-4 border-l-2 border-slate-100">
+                    <label className="block text-xs font-bold text-slate-500 mb-1 uppercase tracking-wider">Dropdown Options (Comma Separated)</label>
+                    <input
+                      type="text"
+                      value={field.options || ""}
+                      onChange={(e) => {
+                        const newFields = [...formFields];
+                        newFields[index].options = e.target.value;
+                        setFormFields(newFields);
+                      }}
+                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-[#6C63FF]/30 focus:border-[#6C63FF] outline-none font-medium text-slate-800"
+                      placeholder="e.g. Male, Female, Other"
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
 
-              <button
-                type="button"
-                onClick={() => setFormFields([...formFields, { id: Math.random().toString(36).substring(7), type: 'text', label: '', required: true }])}
-                className="w-full py-4 border-2 border-dashed border-slate-300 rounded-2xl flex items-center justify-center space-x-2 text-slate-500 hover:text-[#6C63FF] hover:border-[#6C63FF] hover:bg-[#6C63FF]/5 transition-all font-bold"
-              >
-                <Plus size={20} />
-                <span>Add Custom Field</span>
-              </button>
-            </div>
-          )}
+            <button
+              type="button"
+              onClick={() => setFormFields([...formFields, { id: Math.random().toString(36).substring(7), type: 'text', label: '', required: true }])}
+              className="w-full py-4 border-2 border-dashed border-slate-300 rounded-2xl flex items-center justify-center space-x-2 text-slate-500 hover:text-[#6C63FF] hover:border-[#6C63FF] hover:bg-[#6C63FF]/5 transition-all font-bold"
+            >
+              <Plus size={20} />
+              <span>Add Custom Field</span>
+            </button>
+          </div>
         </div>
 
         {/* Sticky Action Bar */}
