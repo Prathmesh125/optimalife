@@ -31,7 +31,7 @@ For dropdowns/select fields, try to match the closest option if options are prov
 
     const prompt = `Extract data for the following schema: ${formSchemaStr}`;
 
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

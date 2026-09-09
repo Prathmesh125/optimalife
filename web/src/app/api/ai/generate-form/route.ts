@@ -29,7 +29,7 @@ Ensure the output is strictly parseable by JSON.parse().`;
 
     const prompt = `Job Title: ${title}\nJob Description: ${description}`;
 
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
