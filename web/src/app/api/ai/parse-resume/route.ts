@@ -23,6 +23,9 @@ export async function POST(req: Request) {
     const fileName = resumeFile.name.toLowerCase();
     
     if (fileName.endsWith('.pdf') || resumeFile.type === 'application/pdf') {
+      if (typeof global.DOMMatrix === 'undefined') {
+        (global as any).DOMMatrix = class DOMMatrix {};
+      }
       const pdfParse = require("pdf-parse");
       const pdfData = await pdfParse(buffer);
       extractedText = pdfData.text;
