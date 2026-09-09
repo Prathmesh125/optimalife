@@ -4,7 +4,7 @@ import { useAuth, AuthProvider } from "@/context/AuthContext";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import Link from "next/link";
-import { LogOut, Home, FileText, Briefcase, FileImage } from "lucide-react";
+import { LogOut, Home, FileText, Briefcase, FileImage, MessageSquare } from "lucide-react";
 import { auth } from "@/lib/firebase/client";
 
 function AdminSidebar() {
@@ -21,6 +21,7 @@ function AdminSidebar() {
     { name: "Pages", href: "/admin/pages", icon: FileText },
     { name: "Blogs", href: "/admin/blogs", icon: FileImage },
     { name: "Careers", href: "/admin/careers", icon: Briefcase },
+    { name: "Inquiries", href: "/admin/inquiries", icon: MessageSquare },
   ];
 
   return (

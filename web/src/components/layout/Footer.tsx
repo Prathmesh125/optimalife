@@ -1,10 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Facebook, Twitter, Youtube, Linkedin } from "lucide-react";
+import { useState } from "react";
+import { collection, addDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase/client";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const [formData, setFormData] = useState({ name: "", phone: "", email: "" });
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.name || !formData.email) return;
+    
+    setSubmitting(true);
+    try {
+      await addDoc(collection(db, "inquiries"), {
+        ...formData,
+        createdAt: new Date(),
+        status: "new"
+      });
+      setSubmitted(true);
+      setFormData({ name: "", phone: "", email: "" });
+      setTimeout(() => setSubmitted(false), 5000);
+    } catch (error) {
+      console.error("Error submitting inquiry:", error);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <footer className="relative bg-[#f4f7f6] text-slate-700 pt-24 pb-12 overflow-hidden border-t border-slate-200">
@@ -33,19 +60,19 @@ export default function Footer() {
             </address>
             <div className="flex space-x-3">
               {[
-                { label: "Fb", link: "https://www.facebook.com/optimalifesciences/" },
-                { label: "X", link: "https://twitter.com/LifeOptima" },
-                { label: "Yt", link: "https://www.youtube.com/@optimalifesciences" },
-                { label: "In", link: "https://in.linkedin.com/company/optimalifesciences" }
+                { icon: Facebook, link: "https://www.facebook.com/optimalifesciences/" },
+                { icon: Twitter, link: "https://twitter.com/LifeOptima" },
+                { icon: Youtube, link: "https://www.youtube.com/@optimalifesciences" },
+                { icon: Linkedin, link: "https://in.linkedin.com/company/optimalifesciences" }
               ].map((social, idx) => (
                 <a 
                   key={idx}
                   href={social.link} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="w-10 h-10 rounded-full bg-[#6C63FF] text-white flex items-center justify-center hover:bg-[#5b54d6] hover:-translate-y-1 transition-all shadow-md font-bold text-sm"
+                  className="w-10 h-10 rounded-full bg-[#6C63FF] text-white flex items-center justify-center hover:bg-[#5b54d6] hover:-translate-y-1 transition-all shadow-md"
                 >
-                  {social.label}
+                  <social.icon size={18} />
                 </a>
               ))}
             </div>
@@ -79,30 +106,39 @@ export default function Footer() {
           {/* Contact Col */}
           <div className="md:col-span-4">
             <h4 className="font-extrabold text-slate-900 text-lg mb-6">Connect with us</h4>
-            <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+            <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="flex space-x-4">
                 <input 
                   type="text" 
-                  placeholder="Name" 
+                  placeholder="Name *" 
+                  required
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
                   className="w-1/2 px-4 py-3 rounded-md border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#6C63FF]/50 bg-white shadow-sm placeholder:text-slate-400"
                 />
                 <input 
                   type="tel" 
                   placeholder="Phone" 
+                  value={formData.phone}
+                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
                   className="w-1/2 px-4 py-3 rounded-md border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#6C63FF]/50 bg-white shadow-sm placeholder:text-slate-400"
                 />
               </div>
               <div className="flex space-x-4">
                 <input 
                   type="email" 
-                  placeholder="Email" 
+                  placeholder="Email *" 
+                  required
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
                   className="flex-grow px-4 py-3 rounded-md border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#6C63FF]/50 bg-white shadow-sm placeholder:text-slate-400"
                 />
                 <button 
-                  type="button" 
-                  className="bg-[#6C63FF] hover:bg-[#5b54d6] text-white px-8 py-3 rounded-md font-bold transition-colors shadow-md flex-shrink-0"
+                  type="submit" 
+                  disabled={submitting}
+                  className={`px-8 py-3 rounded-md font-bold transition-colors shadow-md flex-shrink-0 text-white ${submitted ? 'bg-emerald-500' : 'bg-[#6C63FF] hover:bg-[#5b54d6]'}`}
                 >
-                  SEND
+                  {submitting ? 'SENDING...' : submitted ? 'SENT!' : 'SEND'}
                 </button>
               </div>
             </form>
