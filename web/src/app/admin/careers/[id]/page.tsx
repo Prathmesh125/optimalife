@@ -5,7 +5,7 @@ import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase/client";
 import { logAdminAction } from "@/lib/logger";
 import { useRouter } from "next/navigation";
-import { Save, ArrowLeft, Briefcase, Calendar, CheckCircle2, Plus, Trash2, GripVertical, Settings2, FileText, CheckSquare, Type } from "lucide-react";
+import { Save, ArrowLeft, Briefcase, Calendar, CheckCircle2, Plus, Trash2, GripVertical, Settings2, FileText, CheckSquare, Type, Sparkles, Loader2 } from "lucide-react";
 import Link from "next/link";
 
 export default function JobEditor({ params }: { params: Promise<{ id: string }> }) {
@@ -23,6 +23,7 @@ export default function JobEditor({ params }: { params: Promise<{ id: string }> 
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [generatingForm, setGeneratingForm] = useState(false);
   
   const [useTemplate, setUseTemplate] = useState<"standard" | "custom">("custom");
   const [formFields, setFormFields] = useState<any[]>([]);
@@ -254,7 +255,7 @@ export default function JobEditor({ params }: { params: Promise<{ id: string }> 
           </div>
           <p className="text-sm text-slate-500 mb-6 font-medium">Design the form applicants will fill out when applying for this job.</p>
           
-          <div className="flex items-center space-x-4 mb-8 bg-slate-50 p-2 rounded-xl border border-slate-200">
+          <div className="flex flex-col md:flex-row items-center gap-4 mb-8 bg-slate-50 p-3 rounded-2xl border border-slate-200">
             <button
               type="button"
               onClick={() => {
@@ -286,20 +287,60 @@ export default function JobEditor({ params }: { params: Promise<{ id: string }> 
                   setFormFields(kekaTemplate);
                 }
               }}
-              className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm transition-all text-slate-500 hover:text-[#6C63FF] hover:bg-white hover:shadow-sm border border-transparent`}
+              className={`flex-1 w-full py-3 px-4 rounded-xl font-bold text-sm transition-all text-slate-600 hover:text-[#6C63FF] hover:bg-white hover:shadow-sm border border-transparent`}
             >
-              Load Standard Keka Template
+              Load Standard Template
+            </button>
+            <button
+              type="button"
+              disabled={generatingForm || !title || !description}
+              onClick={async () => {
+                if (formFields.length > 0 && !confirm("This will replace your current fields with an AI generated form. Continue?")) {
+                  return;
+                }
+                setGeneratingForm(true);
+                try {
+                  const res = await fetch("/api/ai/generate-form", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ title, description })
+                  });
+                  const data = await res.json();
+                  if (data.success && data.fields) {
+                    setFormFields(data.fields);
+                  } else {
+                    alert("Error: " + data.error);
+                  }
+                } catch (e: any) {
+                  alert("Failed to generate form: " + e.message);
+                } finally {
+                  setGeneratingForm(false);
+                }
+              }}
+              className={`flex-1 w-full py-3 px-4 rounded-xl font-bold text-sm transition-all text-white bg-gradient-to-r from-[#6C63FF] to-[#8f88ff] shadow-md hover:shadow-lg flex items-center justify-center space-x-2 disabled:opacity-50`}
+            >
+              {generatingForm ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  <span>Analyzing Job...</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles size={16} />
+                  <span>AI Auto-Generate Form</span>
+                </>
+              )}
             </button>
             <button
               type="button"
               onClick={() => {
-                if (formFields.length === 0 || confirm("This will clear your current fields. Continue?")) {
+                if (formFields.length === 0 || confirm("This will clear your current fields to let you start manually. Continue?")) {
                   setFormFields([]);
                 }
               }}
-              className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm transition-all text-slate-500 hover:text-red-500 hover:bg-white hover:shadow-sm border border-transparent`}
+              className={`flex-1 w-full py-3 px-4 rounded-xl font-bold text-sm transition-all text-slate-600 hover:text-red-500 hover:bg-white hover:shadow-sm border border-transparent`}
             >
-              Clear All Fields
+              Manual Form (Start Fresh)
             </button>
           </div>
 
