@@ -6,6 +6,22 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { collection, getCountFromServer } from "firebase/firestore";
 import { db } from "@/lib/firebase/client";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+
+const trafficData = [
+  { name: '1 Sep', views: 400 },
+  { name: '2 Sep', views: 650 },
+  { name: '3 Sep', views: 300 },
+  { name: '4 Sep', views: 850 },
+  { name: '5 Sep', views: 550 },
+  { name: '6 Sep', views: 900 },
+  { name: '7 Sep', views: 450 },
+  { name: '8 Sep', views: 750 },
+  { name: '9 Sep', views: 500 },
+  { name: '10 Sep', views: 950 },
+  { name: '11 Sep', views: 600 },
+  { name: '12 Sep', views: 800 },
+];
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -38,109 +54,92 @@ export default function AdminDashboard() {
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       
-      {/* Welcome Banner */}
-      <div className="bg-gradient-to-r from-[#3a356a] to-[#2b2752] rounded-3xl p-8 md:p-10 text-white shadow-xl relative overflow-hidden">
-        {/* Decorative elements */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-[#6C63FF] opacity-20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-400 opacity-20 rounded-full blur-2xl translate-y-1/3 -translate-x-1/4"></div>
-        
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-black mb-2 tracking-tight">
-              Welcome back, Admin! 👋
-            </h1>
-            <p className="text-white/80 text-lg">
-              You are logged in as <span className="font-semibold text-emerald-400">{user?.email}</span>.
-            </p>
-          </div>
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-6 py-4 flex items-center space-x-4">
-            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-              <TrendingUp className="text-emerald-400" size={24} />
-            </div>
-            <div>
-              <p className="text-white/70 text-sm font-medium">System Status</p>
-              <p className="text-white font-bold text-xl tracking-wide">All Systems Operational</p>
-            </div>
-          </div>
+      {/* Welcome Header - Clean & Structural */}
+      <div className="bg-[#1a1f2c] rounded-2xl p-8 md:p-10 text-white shadow-sm border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-semibold mb-2 tracking-tight font-serif">
+            Good morning, Admin.
+          </h1>
+          <p className="text-slate-400 text-lg">
+            Logged in as <span className="text-slate-200">{user?.email}</span>
+          </p>
+        </div>
+        <div className="flex items-center space-x-3 bg-white/5 border border-white/10 rounded-lg px-5 py-3">
+          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+          <span className="text-sm font-medium tracking-wide text-slate-300">All Systems Operational</span>
         </div>
       </div>
 
-      {/* Metric Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        <Link href="/admin/pages" className="group bg-white rounded-3xl p-6 shadow-sm border border-slate-100 hover:shadow-xl hover:border-[#6C63FF]/30 transition-all duration-300">
-          <div className="flex justify-between items-start mb-6">
-            <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-              <FileText className="text-blue-500" size={28} />
+      {/* Unified Metrics Panel */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-200">
+          
+          <Link href="/admin/pages" className="p-8 hover:bg-slate-50 transition-colors group">
+            <div className="flex items-center space-x-3 mb-4">
+              <FileText className="text-slate-400 group-hover:text-blue-600 transition-colors" size={20} />
+              <h3 className="text-slate-500 font-medium text-sm uppercase tracking-widest">Total Pages</h3>
             </div>
-            <span className="bg-emerald-50 text-emerald-600 text-xs font-bold px-3 py-1 rounded-full border border-emerald-100">Active</span>
-          </div>
-          <h3 className="text-slate-400 font-semibold text-sm uppercase tracking-wider mb-1">Total Pages</h3>
-          <div className="flex items-end justify-between">
-            <p className="text-4xl font-black text-slate-800">{loading ? "..." : metrics.pages}</p>
-            <span className="text-sm font-semibold text-emerald-500 flex items-center">+3% this month</span>
-          </div>
-        </Link>
-
-        <Link href="/admin/blogs" className="group bg-white rounded-3xl p-6 shadow-sm border border-slate-100 hover:shadow-xl hover:border-emerald-400/30 transition-all duration-300">
-          <div className="flex justify-between items-start mb-6">
-            <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-              <FileImage className="text-emerald-500" size={28} />
+            <div className="flex items-baseline space-x-3">
+              <p className="text-4xl font-bold text-slate-900 tracking-tight">{loading ? "..." : metrics.pages}</p>
             </div>
-            <span className="bg-emerald-50 text-emerald-600 text-xs font-bold px-3 py-1 rounded-full border border-emerald-100">Live</span>
-          </div>
-          <h3 className="text-slate-400 font-semibold text-sm uppercase tracking-wider mb-1">Published Blogs</h3>
-          <div className="flex items-end justify-between">
-            <p className="text-4xl font-black text-slate-800">{loading ? "..." : metrics.blogs}</p>
-            <span className="text-sm font-semibold text-emerald-500 flex items-center">+12% this month</span>
-          </div>
-        </Link>
+          </Link>
 
-        <Link href="/admin/careers" className="group bg-white rounded-3xl p-6 shadow-sm border border-slate-100 hover:shadow-xl hover:border-orange-400/30 transition-all duration-300">
-          <div className="flex justify-between items-start mb-6">
-            <div className="w-14 h-14 rounded-2xl bg-orange-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-              <Briefcase className="text-orange-500" size={28} />
+          <Link href="/admin/blogs" className="p-8 hover:bg-slate-50 transition-colors group">
+            <div className="flex items-center space-x-3 mb-4">
+              <FileImage className="text-slate-400 group-hover:text-emerald-600 transition-colors" size={20} />
+              <h3 className="text-slate-500 font-medium text-sm uppercase tracking-widest">Published Blogs</h3>
             </div>
-            <span className="bg-orange-50 text-orange-600 text-xs font-bold px-3 py-1 rounded-full border border-orange-100">Pending</span>
-          </div>
-          <h3 className="text-slate-400 font-semibold text-sm uppercase tracking-wider mb-1">Job Applications</h3>
-          <div className="flex items-end justify-between">
-            <p className="text-4xl font-black text-slate-800">{loading ? "..." : metrics.applications}</p>
-            <span className="text-sm font-semibold text-orange-500 flex items-center">New this week</span>
-          </div>
-        </Link>
+            <div className="flex items-baseline space-x-3">
+              <p className="text-4xl font-bold text-slate-900 tracking-tight">{loading ? "..." : metrics.blogs}</p>
+            </div>
+          </Link>
 
+          <Link href="/admin/careers" className="p-8 hover:bg-slate-50 transition-colors group">
+            <div className="flex items-center space-x-3 mb-4">
+              <Briefcase className="text-slate-400 group-hover:text-orange-600 transition-colors" size={20} />
+              <h3 className="text-slate-500 font-medium text-sm uppercase tracking-widest">Job Applications</h3>
+            </div>
+            <div className="flex items-baseline space-x-3">
+              <p className="text-4xl font-bold text-slate-900 tracking-tight">{loading ? "..." : metrics.applications}</p>
+            </div>
+          </Link>
+
+        </div>
       </div>
 
-      {/* Simulated Analytics Graph area */}
-      <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
+      {/* Recharts Analytics Graph area */}
+      <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-2xl font-bold text-slate-800 mb-1">Website Traffic</h2>
-            <p className="text-slate-500 font-medium">Visitor analytics for the last 30 days</p>
+            <h2 className="text-xl font-semibold text-slate-900 mb-1">Website Traffic</h2>
+            <p className="text-slate-500 text-sm">Unique visitor analytics for the last 12 days</p>
           </div>
-          <div className="flex space-x-2">
-            <button className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg font-medium text-sm hover:bg-slate-200 transition">Week</button>
-            <button className="px-4 py-2 bg-[#6C63FF] text-white rounded-lg font-medium text-sm shadow-md">Month</button>
-            <button className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg font-medium text-sm hover:bg-slate-200 transition">Year</button>
+          <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden">
+            <button className="px-4 py-2 bg-slate-50 text-slate-600 text-sm font-medium hover:bg-slate-100 transition border-r border-slate-200">Week</button>
+            <button className="px-4 py-2 bg-blue-600 text-white text-sm font-medium">Month</button>
+            <button className="px-4 py-2 bg-slate-50 text-slate-600 text-sm font-medium hover:bg-slate-100 transition border-l border-slate-200">Year</button>
           </div>
         </div>
 
-        {/* Mock Graph using pure CSS grids and gradients */}
-        <div className="relative h-64 w-full flex items-end justify-between gap-2 px-2 pb-8 border-b border-slate-100">
-          {[40, 65, 30, 85, 55, 90, 45, 75, 50, 95, 60, 80].map((val, i) => (
-            <div key={i} className="w-full relative group flex justify-center">
-              <div 
-                className="w-full max-w-[40px] bg-gradient-to-t from-[#6C63FF]/20 to-[#6C63FF] rounded-t-md opacity-80 group-hover:opacity-100 transition-all duration-300"
-                style={{ height: `${val}%` }}
-              ></div>
-              <div className="absolute -bottom-8 text-xs font-semibold text-slate-400">{i + 1} Sep</div>
-              {/* Tooltip */}
-              <div className="absolute -top-10 bg-slate-800 text-white text-xs font-bold py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                {val * 12} Views
-              </div>
-            </div>
-          ))}
+        <div className="h-[300px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={trafficData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#2563eb" stopOpacity={0.1}/>
+                  <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
+              <Tooltip 
+                contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                itemStyle={{ color: '#0f172a', fontWeight: 600 }}
+              />
+              <Area type="monotone" dataKey="views" stroke="#2563eb" strokeWidth={3} fillOpacity={1} fill="url(#colorViews)" />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
