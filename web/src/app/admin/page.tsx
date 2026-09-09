@@ -20,10 +20,11 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function fetchMetrics() {
       try {
-        const [pagesSnap, blogsSnap, appsSnap, trafficSnap] = await Promise.all([
+        const [pagesSnap, blogsSnap, appsSnap] = await Promise.all([
           getCountFromServer(collection(db, "pages")),
           getCountFromServer(collection(db, "blog_posts")),
           getCountFromServer(collection(db, "applications")),
+        ]);
         const trafficSnap = await getDocs(query(collection(db, "website_traffic"), orderBy("date", "desc"), limit(365)));
 
         setMetrics({
