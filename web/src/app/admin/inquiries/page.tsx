@@ -9,7 +9,7 @@ interface Inquiry {
   id: string;
   name: string;
   email: string;
-  phone: string;
+  message: string;
   createdAt: any;
   status: string;
 }
@@ -67,10 +67,9 @@ export default function InquiriesPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-sm font-semibold uppercase tracking-wider">
-                  <th className="p-4 pl-6">Visitor</th>
-                  <th className="p-4">Contact Info</th>
-                  <th className="p-4">Date Submitted</th>
-                  <th className="p-4 text-right pr-6">Actions</th>
+                  <th className="p-4 pl-6 w-1/4">Visitor</th>
+                  <th className="p-4 w-2/4">Message</th>
+                  <th className="p-4 w-1/4 text-right pr-6">Date & Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -78,42 +77,36 @@ export default function InquiriesPage() {
                   <tr key={inquiry.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="p-4 pl-6 align-top">
                       <div className="font-bold text-slate-800">{inquiry.name || "Anonymous"}</div>
-                      <div className="text-xs text-emerald-500 font-medium uppercase tracking-wider mt-1 border border-emerald-200 bg-emerald-50 inline-block px-2 py-0.5 rounded-full">
+                      <div className="flex items-center text-sm text-slate-500 mt-1 mb-2">
+                        <Mail size={14} className="mr-1.5 text-slate-400" />
+                        <a href={`mailto:${inquiry.email}`} className="hover:text-[#6C63FF] hover:underline">
+                          {inquiry.email}
+                        </a>
+                      </div>
+                      <div className="text-[10px] text-emerald-500 font-bold uppercase tracking-widest mt-2 border border-emerald-200 bg-emerald-50 inline-block px-2 py-0.5 rounded-md">
                         {inquiry.status || "New"}
                       </div>
                     </td>
                     <td className="p-4 align-top">
-                      <div className="space-y-2 text-sm text-slate-600">
-                        <div className="flex items-center">
-                          <Mail size={14} className="mr-2 text-slate-400" />
-                          <a href={`mailto:${inquiry.email}`} className="hover:text-[#6C63FF] hover:underline">
-                            {inquiry.email}
-                          </a>
+                      <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 text-sm text-slate-700 leading-relaxed max-h-48 overflow-y-auto whitespace-pre-wrap">
+                        {inquiry.message || <span className="text-slate-400 italic">No message provided</span>}
+                      </div>
+                    </td>
+                    <td className="p-4 pr-6 align-top text-right text-sm text-slate-500">
+                      <div className="flex flex-col items-end space-y-4">
+                        <div className="flex items-center text-slate-500 font-medium bg-white border border-slate-100 shadow-sm px-3 py-1.5 rounded-lg">
+                          <Calendar size={14} className="mr-2 text-slate-400" />
+                          {inquiry.createdAt?.toDate ? inquiry.createdAt.toDate().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : "Unknown Date"}
                         </div>
-                        {inquiry.phone && (
-                          <div className="flex items-center">
-                            <Phone size={14} className="mr-2 text-slate-400" />
-                            <a href={`tel:${inquiry.phone}`} className="hover:text-[#6C63FF] hover:underline">
-                              {inquiry.phone}
-                            </a>
-                          </div>
-                        )}
+                        <button
+                          onClick={() => handleDelete(inquiry.id)}
+                          className="flex items-center space-x-2 px-3 py-2 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100 text-sm font-semibold"
+                          title="Delete Inquiry"
+                        >
+                          <Trash2 size={16} />
+                          <span>Delete</span>
+                        </button>
                       </div>
-                    </td>
-                    <td className="p-4 align-top text-sm text-slate-500">
-                      <div className="flex items-center">
-                        <Calendar size={14} className="mr-2 text-slate-400" />
-                        {inquiry.createdAt?.toDate ? inquiry.createdAt.toDate().toLocaleString() : "Unknown Date"}
-                      </div>
-                    </td>
-                    <td className="p-4 pr-6 align-top text-right">
-                      <button
-                        onClick={() => handleDelete(inquiry.id)}
-                        className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete Inquiry"
-                      >
-                        <Trash2 size={18} />
-                      </button>
                     </td>
                   </tr>
                 ))}

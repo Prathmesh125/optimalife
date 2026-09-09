@@ -1,8 +1,9 @@
 import { adminDb } from "@/lib/firebase/admin";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { Mail, Phone, MapPin, Send } from "lucide-react";
+import { Mail, Phone, MapPin } from "lucide-react";
 import { notFound } from "next/navigation";
+import ContactForm from "@/components/ui/ContactForm";
 
 export const metadata = {
   title: "Contact Us | Optima Life Sciences",
@@ -112,42 +113,7 @@ export default async function ContactPage() {
             </div>
 
             {/* Contact Form */}
-            <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200">
-              <h3 className="text-2xl font-serif font-bold text-slate-900 mb-6">Send a Message</h3>
-              <form className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Full Name</label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[var(--color-primary-light)] focus:border-[var(--color-primary-light)] transition-colors text-slate-900"
-                    placeholder="John Doe"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Email Address</label>
-                  <input
-                    type="email"
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[var(--color-primary-light)] focus:border-[var(--color-primary-light)] transition-colors text-slate-900"
-                    placeholder="john@company.com"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Message</label>
-                  <textarea
-                    rows={4}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[var(--color-primary-light)] focus:border-[var(--color-primary-light)] transition-colors text-slate-900"
-                    placeholder="How can we help you?"
-                  />
-                </div>
-                <button
-                  type="button"
-                  className="w-full bg-[var(--color-primary)] text-white px-8 py-4 rounded-xl text-base font-semibold hover:bg-[#00381a] transition-all flex items-center justify-center space-x-2 shadow-lg shadow-[var(--color-primary)]/20"
-                >
-                  <span>Send Message</span>
-                  <Send size={18} />
-                </button>
-              </form>
-            </div>
+            <ContactForm />
 
           </div>
         </div>
