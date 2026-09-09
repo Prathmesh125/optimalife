@@ -9,9 +9,17 @@ export async function submitApplication(formData: FormData) {
     const name = formData.get("name") as string;
     const email = formData.get("email") as string;
     const phone = formData.get("phone") as string;
-    const resumeFile = formData.get("resume") as File;
+    const resumeFile = formData.get("resume") as File | null;
+    
+    // Extract any dynamic fields
+    const dynamicData: Record<string, string> = {};
+    formData.forEach((value, key) => {
+      if (typeof value === "string" && !["jobId", "name", "email", "phone", "resume"].includes(key)) {
+        dynamicData[key] = value;
+      }
+    });
 
-    if (!jobId || !name || !email || !resumeFile) {
+    if (!jobId || !name || !email) {
       throw new Error("Missing required fields");
     }
 
@@ -25,17 +33,20 @@ export async function submitApplication(formData: FormData) {
       },
     });
 
-    const fileBuffer = await resumeFile.arrayBuffer();
-    const objectKey = `resumes/${Date.now()}_${resumeFile.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+    let resumeUrl = null;
+    if (resumeFile && resumeFile.size > 0) {
+      const fileBuffer = await resumeFile.arrayBuffer();
+      const objectKey = `resumes/${Date.now()}_${resumeFile.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
 
-    await r2.send(new PutObjectCommand({
-      Bucket: process.env.CLOUDFLARE_R2_BUCKET_ID!,
-      Key: objectKey,
-      Body: Buffer.from(fileBuffer),
-      ContentType: resumeFile.type || "application/pdf",
-    }));
+      await r2.send(new PutObjectCommand({
+        Bucket: process.env.CLOUDFLARE_R2_BUCKET_ID!,
+        Key: objectKey,
+        Body: Buffer.from(fileBuffer),
+        ContentType: resumeFile.type || "application/pdf",
+      }));
 
-    const resumeUrl = `${process.env.NEXT_PUBLIC_CLOUDFLARE_PUBLIC_URL}/${objectKey}`;
+      resumeUrl = `${process.env.NEXT_PUBLIC_CLOUDFLARE_PUBLIC_URL}/${objectKey}`;
+    }
 
     // 2. Save Application to Firestore
     const appRef = adminDb.collection("applications").doc();
@@ -45,6 +56,7 @@ export async function submitApplication(formData: FormData) {
       applicantEmail: email,
       applicantPhone: phone || "",
       resumeUrl,
+      dynamicData,
       submittedAt: new Date().toISOString(),
     });
 

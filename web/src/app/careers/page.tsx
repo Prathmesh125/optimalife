@@ -7,7 +7,8 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { submitApplication } from "@/app/actions/applyJob";
 import ReactMarkdown from "react-markdown";
-import { Briefcase, MapPin, UploadCloud, CheckCircle, FileText } from "lucide-react";
+import { Briefcase, MapPin, UploadCloud, CheckCircle, FileText, ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 interface Job {
   id: string;
@@ -21,14 +22,6 @@ export default function CareersPage() {
   const [header, setHeader] = useState<{title?: string, subtitle?: string}>({});
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
-  const [fileName, setFileName] = useState("");
-
-  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     async function fetchPageData() {
@@ -76,31 +69,9 @@ export default function CareersPage() {
     fetchPageData();
   }, []);
 
-  const handleApply = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedJob || !formRef.current) return;
-    
-    setSubmitting(true);
-    setErrorMsg("");
-    
-    const formData = new FormData(formRef.current);
-    formData.append("jobId", selectedJob.title);
-
-    const result = await submitApplication(formData);
-    
-    if (result.success) {
-      setSuccess(true);
-      setFileName("");
-      formRef.current.reset();
-      setTimeout(() => {
-        setSelectedJob(null);
-        setSuccess(false);
-      }, 3000);
-    } else {
-      setErrorMsg(result.error || "Failed to submit application.");
     }
-    setSubmitting(false);
-  };
+    fetchPageData();
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -124,120 +95,32 @@ export default function CareersPage() {
           {loading ? (
             <div className="text-center py-20">Loading open positions...</div>
           ) : (
-            <div className="grid md:grid-cols-12 gap-12">
-              
-              {/* Job List */}
-              <div className="md:col-span-5 space-y-4">
-                {jobs.length === 0 ? (
-                  <div className="bg-white p-8 rounded-2xl border border-slate-200 text-center">
-                    <p className="text-slate-500">No open positions right now. Check back later!</p>
-                  </div>
-                ) : (
-                  jobs.map(job => (
-                    <div 
-                      key={job.id}
-                      onClick={() => setSelectedJob(job)}
-                      className={`p-6 rounded-2xl border cursor-pointer transition-all ${
-                        selectedJob?.id === job.id 
-                          ? "border-[var(--color-primary)] bg-[var(--color-primary)]/5 shadow-md" 
-                          : "border-slate-200 bg-white hover:border-[var(--color-primary-light)]/50 hover:shadow-sm"
-                      }`}
-                    >
-                      <h3 className="text-xl font-bold text-slate-900 mb-3">{job.title}</h3>
-                      <div className="flex items-center space-x-4 text-sm text-slate-500">
-                        <span className="flex items-center space-x-1"><Briefcase size={14}/> <span>{job.type || "Full-Time"}</span></span>
-                        <span className="flex items-center space-x-1"><MapPin size={14}/> <span>{job.location || "Pune, MH"}</span></span>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              {/* Job Details / Application Form */}
-              <div className="md:col-span-7">
-                {selectedJob ? (
-                  <div className="bg-white p-8 md:p-10 rounded-3xl shadow-sm border border-slate-200 sticky top-32">
-                    <h2 className="text-3xl font-serif font-bold text-[var(--color-primary)] mb-6">{selectedJob.title}</h2>
-                    
-                    <div className="prose prose-slate max-w-none mb-10 prose-headings:font-serif prose-a:text-blue-600">
-                      <ReactMarkdown>{selectedJob.description}</ReactMarkdown>
-                    </div>
-
-                    <div className="border-t border-slate-200 pt-10">
-                      <h3 className="text-xl font-bold text-slate-900 mb-6">Apply for this position</h3>
-                      
-                      {success ? (
-                        <div className="bg-green-50 text-green-700 p-6 rounded-2xl flex items-center space-x-3 border border-green-100">
-                          <CheckCircle size={24} />
-                          <span className="font-medium text-lg">Application submitted successfully! We'll be in touch.</span>
+            <div className="max-w-4xl mx-auto">
+              {jobs.length === 0 ? (
+                <div className="bg-white p-12 rounded-3xl border border-slate-200 text-center shadow-sm">
+                  <p className="text-slate-500 text-lg">No open positions right now. Check back later!</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {jobs.map(job => (
+                    <Link href={`/careers/${job.id}`} key={job.id} className="block group">
+                      <div className="bg-white p-8 rounded-3xl border border-slate-200 hover:border-[var(--color-primary-light)]/50 hover:shadow-lg transition-all duration-300 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div>
+                          <h3 className="text-2xl font-bold text-slate-900 mb-3 group-hover:text-[var(--color-primary)] transition-colors">{job.title}</h3>
+                          <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-slate-500">
+                            <span className="flex items-center space-x-1 bg-slate-50 px-3 py-1 rounded-lg border border-slate-100"><Briefcase size={16}/> <span>{job.type || "Full-Time"}</span></span>
+                            <span className="flex items-center space-x-1 bg-slate-50 px-3 py-1 rounded-lg border border-slate-100"><MapPin size={16}/> <span>{job.location || "Pune, MH"}</span></span>
+                          </div>
                         </div>
-                      ) : (
-                        <form ref={formRef} onSubmit={handleApply} className="space-y-5">
-                          {errorMsg && <div className="text-red-600 text-sm">{errorMsg}</div>}
-                          
-                          <div className="grid grid-cols-2 gap-5">
-                            <div>
-                              <label className="block text-sm font-medium text-slate-700 mb-1">Full Name *</label>
-                              <input type="text" name="name" required className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)]" />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-slate-700 mb-1">Email Address *</label>
-                              <input type="email" name="email" required className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)]" />
-                            </div>
-                          </div>
-                          
-                          <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
-                            <input type="tel" name="phone" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)]" />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Upload Resume (PDF, DOCX) *</label>
-                            <div className="flex items-center justify-center w-full">
-                              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 border-dashed rounded-xl cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
-                                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                  {fileName ? (
-                                    <>
-                                      <FileText className="w-8 h-8 text-[var(--color-primary)] mb-2" />
-                                      <p className="text-sm text-slate-700 font-semibold">{fileName}</p>
-                                      <p className="text-xs text-slate-500 mt-1">Click to change file</p>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <UploadCloud className="w-8 h-8 text-slate-400 mb-2" />
-                                      <p className="text-sm text-slate-500 font-medium">Click to upload or drag and drop</p>
-                                    </>
-                                  )}
-                                </div>
-                                <input 
-                                  type="file" 
-                                  name="resume" 
-                                  accept=".pdf,.doc,.docx" 
-                                  required 
-                                  className="hidden" 
-                                  onChange={(e) => setFileName(e.target.files?.[0]?.name || "")}
-                                />
-                              </label>
-                            </div>
-                          </div>
-
-                          <button
-                            type="submit"
-                            disabled={submitting}
-                            className="w-full bg-[var(--color-primary)] text-white px-8 py-4 rounded-xl text-base font-semibold hover:bg-[#00381a] transition-all disabled:opacity-50 mt-4"
-                          >
-                            {submitting ? "Submitting..." : "Submit Application"}
-                          </button>
-                        </form>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-white/50 border border-slate-200 border-dashed rounded-3xl h-full min-h-[400px] flex items-center justify-center text-slate-400">
-                    Select a position from the left to view details
-                  </div>
-                )}
-              </div>
+                        <div className="flex items-center space-x-2 text-[var(--color-primary)] font-bold">
+                          <span>View Details</span>
+                          <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
