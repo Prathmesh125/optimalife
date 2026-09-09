@@ -120,7 +120,7 @@ export default async function BlogsPage() {
                       
                       {/* Extract a short snippet from content */}
                       <p className="text-slate-600 text-[15px] leading-relaxed mb-8 line-clamp-3">
-                        {blog.content.substring(0, 150).replace(/[*_#]/g, '').replace(/\[.*?\]\(.*?\)/g, '')}...
+                        {blog.content.replace(/!\[.*?\]\(.*?\)/g, '').replace(/\[(.*?)\]\(.*?\)/g, '$1').replace(/[*_#>`]/g, '').substring(0, 150).trim()}...
                       </p>
                       
                       <div className="mt-auto pt-6 border-t border-slate-100 flex items-center space-x-2 text-slate-500 font-semibold text-sm group-hover:text-[#6C63FF] transition-colors">
