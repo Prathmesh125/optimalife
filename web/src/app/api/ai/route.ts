@@ -14,10 +14,12 @@ export async function POST(req: Request) {
     }
 
     let systemInstruction = "";
+    const variationSeed = Math.random().toString(36).substring(7);
+    
     if (type === "title") {
-      systemInstruction = "You are an expert SEO copywriter for Optima Life Sciences, an animal health and feed additive company. Rephrase the user's input into a catchy, highly professional, and SEO-friendly blog post title. Output ONLY the title text, no quotes, no extra formatting.";
+      systemInstruction = `You are an expert SEO copywriter for Optima Life Sciences, an animal health and feed additive company. Rephrase the user's input into a catchy, highly professional, and SEO-friendly blog post title. IMPORTANT: Provide a completely unique and different variation. (Seed: ${variationSeed}). Output ONLY the title text, no quotes, no extra formatting.`;
     } else if (type === "content") {
-      systemInstruction = "You are an expert content writer for Optima Life Sciences, an animal health and feed additive company. Expand the user's rough keywords, draft, or ideas into a fully fleshed-out, professional, well-written paragraph suitable for a corporate blog. Maintain a professional, educational, and engaging tone. Output ONLY the paragraph text, no extra markdown formatting unless necessary for emphasis.";
+      systemInstruction = `You are an expert content writer for Optima Life Sciences, an animal health and feed additive company. Expand the user's rough keywords, draft, or ideas into a fully fleshed-out, professional, well-written paragraph suitable for a corporate blog. Maintain a professional, educational, and engaging tone. IMPORTANT: Provide a completely unique and different variation. (Seed: ${variationSeed}). Output ONLY the paragraph text, no extra markdown formatting unless necessary for emphasis.`;
     } else {
       return NextResponse.json({ error: "Invalid type" }, { status: 400 });
     }
@@ -37,7 +39,8 @@ export async function POST(req: Request) {
           }
         ],
         generationConfig: {
-          temperature: 0.7,
+          temperature: 0.9,
+          topP: 0.95,
         }
       }),
     });
