@@ -2,7 +2,8 @@
 
 import { useEffect, useState, use } from "react";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase/client";
+import { db, auth } from "@/lib/firebase/client";
+import { logAdminAction } from "@/lib/logger";
 import { useRouter } from "next/navigation";
 import { Save, ArrowLeft, Briefcase, Calendar, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
@@ -87,6 +88,7 @@ export default function JobEditor({ params }: { params: Promise<{ id: string }> 
 
       if (isNew) {
         await setDoc(docRef, payload);
+        await logAdminAction("CAREER_CREATED", auth.currentUser?.email || "Unknown", `Created new job role: ${title}`);
         router.push(`/admin/careers/${docId}`);
       } else {
         await updateDoc(docRef, payload);

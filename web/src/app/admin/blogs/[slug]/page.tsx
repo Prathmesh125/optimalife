@@ -2,7 +2,8 @@
 
 import { useEffect, useState, use, useRef } from "react";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase/client";
+import { db, auth } from "@/lib/firebase/client";
+import { logAdminAction } from "@/lib/logger";
 import { useRouter } from "next/navigation";
 import { Save, ArrowLeft, Image as ImageIcon, Calendar, CheckCircle2, FileImage, Trash2, Loader2, Type, Heading, ChevronUp, ChevronDown, Plus, X } from "lucide-react";
 import Link from "next/link";
@@ -91,6 +92,7 @@ export default function BlogEditor({ params }: { params: Promise<{ slug: string 
 
       if (isNew) {
         await setDoc(docRef, payload);
+        await logAdminAction("BLOG_CREATED", auth.currentUser?.email || "Unknown", `Created new blog post: ${title}`);
         router.push(`/admin/blogs/${docId}`);
       } else {
         await updateDoc(docRef, payload);

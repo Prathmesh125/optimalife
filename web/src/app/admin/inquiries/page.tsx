@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { collection, query, orderBy, onSnapshot, deleteDoc, doc } from "firebase/firestore";
-import { db } from "@/lib/firebase/client";
+import { db, auth } from "@/lib/firebase/client";
+import { logAdminAction } from "@/lib/logger";
 import { Trash2, MessageSquare, Mail, Phone, Calendar } from "lucide-react";
 
 interface Inquiry {
@@ -33,10 +34,11 @@ export default function InquiriesPage() {
     return () => unsubscribe();
   }, []);
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (inquiry: Inquiry) => {
     if (confirm("Are you sure you want to delete this inquiry?")) {
       try {
-        await deleteDoc(doc(db, "inquiries", id));
+        await deleteDoc(doc(db, "inquiries", inquiry.id));
+        await logAdminAction("INQUIRY_DELETED", auth.currentUser?.email || "Unknown", `Deleted inquiry from: ${inquiry.name} (${inquiry.email})`);
       } catch (error) {
         console.error("Error deleting inquiry:", error);
       }
@@ -110,7 +112,7 @@ export default function InquiriesPage() {
                           {inquiry.createdAt?.toDate ? inquiry.createdAt.toDate().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : "Unknown Date"}
                         </div>
                         <button
-                          onClick={() => handleDelete(inquiry.id)}
+                          onClick={() => handleDelete(inquiry)}
                           className="flex items-center space-x-2 px-3 py-2 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100 text-sm font-semibold"
                           title="Delete Inquiry"
                         >
