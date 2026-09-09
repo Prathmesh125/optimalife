@@ -120,11 +120,8 @@ export default function GlobalMap() {
                 fill="#e2e8f0"
                 stroke="#ffffff"
                 strokeWidth={0.5}
-                style={{
-                  default: { outline: "none" },
-                  hover: { fill: "#cbd5e1", outline: "none", cursor: "crosshair" },
-                  pressed: { outline: "none" },
-                }}
+                className="hover:fill-slate-300 hover:cursor-crosshair focus:outline-none"
+                style={{ outline: "none" }}
               />
             ))
           }
