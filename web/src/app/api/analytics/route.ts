@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase/admin";
-import * as admin from "firebase-admin";
+import { FieldValue } from "firebase-admin/firestore";
 
 export async function POST(req: Request) {
   try {
@@ -33,10 +33,10 @@ export async function POST(req: Request) {
         const isNewSession = !sessions.includes(sessionId);
         
         transaction.update(docRef, {
-          views: admin.firestore.FieldValue.increment(1),
+          views: FieldValue.increment(1),
           ...(isNewSession && { 
-            sessions: admin.firestore.FieldValue.arrayUnion(sessionId),
-            visitors: admin.firestore.FieldValue.increment(1) 
+            sessions: FieldValue.arrayUnion(sessionId),
+            visitors: FieldValue.increment(1) 
           })
         });
       }
