@@ -57,7 +57,7 @@ export default function AdminDashboard() {
       {/* Welcome Header - Clean & Structural */}
       <div className="bg-[#1a1f2c] rounded-2xl p-8 md:p-10 text-white shadow-sm border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-3xl md:text-4xl font-semibold mb-2 tracking-tight font-serif">
+          <h1 className="text-3xl md:text-4xl font-semibold mb-2 tracking-tight font-serif text-white">
             Good morning, Admin.
           </h1>
           <p className="text-slate-400 text-lg">
