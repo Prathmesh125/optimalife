@@ -1,6 +1,6 @@
 # Optima Life Sciences
 
-![Optima Life Sciences Hero](https://images.unsplash.com/photo-1596704017254-9b121068fb31?q=80&w=1974&auto=format&fit=crop)
+![Optima Life Sciences Hero]
 
 Welcome to the **Optima Life Sciences** website repository! This is a modern, high-performance web application built with Next.js 15, TailwindCSS, and Firebase.
 
