@@ -7,6 +7,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cleanMarkdown } from "@/lib/utils/cleanMarkdown";
 
+export const dynamic = "force-dynamic";
+
 async function getBlog(slug: string) {
   const doc = await adminDb.collection("blog_posts").doc(slug).get();
   return doc.exists ? { id: doc.id, ...doc.data() } as any : null;

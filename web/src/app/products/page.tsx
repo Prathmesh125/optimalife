@@ -6,6 +6,8 @@ import { ArrowRight, Package, Home } from "lucide-react";
 import type { Metadata } from "next";
 import { cleanMarkdown } from "@/lib/utils/cleanMarkdown";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Products | Optima Life Sciences",
   description: "Explore our range of innovative feed additives, bio-security products, and dosing systems.",

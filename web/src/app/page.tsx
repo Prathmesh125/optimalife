@@ -8,6 +8,8 @@ import CertificationsCarousel from "@/components/ui/CertificationsCarousel";
 import GlobalMap from "@/components/ui/GlobalMap";
 import AnimatedStat from "@/components/ui/AnimatedStat";
 
+export const dynamic = "force-dynamic";
+
 async function getHomeData() {
   const doc = await adminDb.collection("pages").doc("home").get();
   return doc.exists ? doc.data() : null;

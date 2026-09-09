@@ -4,14 +4,24 @@ import Footer from "@/components/layout/Footer";
 import Link from "next/link";
 import { ArrowRight, Home } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 async function getBlogs() {
   const snapshot = await adminDb.collection("blog_posts").get();
   const blogs = snapshot.docs.map((doc: any) => {
     const data = doc.data();
+    
+    // Extract text from blocks if present
+    let rawText = data.content || "";
+    if (data.blocks && data.blocks.length > 0) {
+      const textBlocks = data.blocks.filter((b: any) => b.type === "text" && b.content);
+      rawText = textBlocks.map((b: any) => b.content).join(" ");
+    }
+    
     return {
       slug: doc.id,
       title: data.title,
-      content: data.content,
+      content: rawText,
       images: data.images || [],
       updatedAt: data.updatedAt,
       scheduledDate: data.scheduledDate
