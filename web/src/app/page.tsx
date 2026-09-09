@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight, Phone, Shield, Activity, Beaker } from "lucide-react";
 import HeroCarousel from "@/components/ui/HeroCarousel";
 import CertificationsCarousel from "@/components/ui/CertificationsCarousel";
+import GlobalMap from "@/components/ui/GlobalMap";
 
 async function getHomeData() {
   const doc = await adminDb.collection("pages").doc("home").get();
@@ -167,15 +168,9 @@ export default async function Home() {
               <h2 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-16">
                 {globalPresence.title}
               </h2>
-              {globalPresence.image && (
-                <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
-                  <img 
-                    src={globalPresence.image} 
-                    alt="Global Map" 
-                    className="w-full h-auto object-contain"
-                  />
-                </div>
-              )}
+              
+              <GlobalMap />
+              
             </div>
           </section>
         )}
