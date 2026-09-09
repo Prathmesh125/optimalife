@@ -27,6 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     
     const blogRoutes = snapshot.docs
       .map((doc: any) => ({ id: doc.id, ...doc.data() } as any))
+      .filter((blog: any) => blog.status !== "draft")
       .filter((blog: any) => !blog.scheduledDate || new Date(blog.scheduledDate) <= now)
       .map((blog: any) => ({
         url: `${baseUrl}/blogs/${blog.id}`,

@@ -24,13 +24,15 @@ async function getBlogs() {
       content: rawText,
       images: data.images || [],
       updatedAt: data.updatedAt,
-      scheduledDate: data.scheduledDate
+      scheduledDate: data.scheduledDate,
+      status: data.status,
     };
   });
   
   // Filter out scheduled future posts and sort by date descending
   const now = new Date();
   return blogs
+    .filter((b: any) => b.status !== "draft")
     .filter((b: any) => !b.scheduledDate || new Date(b.scheduledDate) <= now)
     .sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 }

@@ -5,7 +5,7 @@ import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase/client";
 import { logAdminAction } from "@/lib/logger";
 import { useRouter } from "next/navigation";
-import { Save, ArrowLeft, Image as ImageIcon, Calendar, CheckCircle2, FileImage, Trash2, Loader2, Type, Heading, ChevronUp, ChevronDown, Plus, X, Sparkles } from "lucide-react";
+import { Save, ArrowLeft, Image as ImageIcon, Calendar, CheckCircle2, FileImage, Trash2, Loader2, Type, Heading, ChevronUp, ChevronDown, Plus, X, Sparkles, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 
 interface BlogImage {
@@ -36,11 +36,26 @@ export default function BlogEditor({ params }: { params: Promise<{ slug: string 
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
+  const [status, setStatus] = useState<"draft" | "published">("published");
+  const [isDirty, setIsDirty] = useState(false);
+  const [showBackModal, setShowBackModal] = useState(false);
+
   const [activeMenuIndex, setActiveMenuIndex] = useState<number | null>(null);
   const [uploadingBlockId, setUploadingBlockId] = useState<string | null>(null);
 
   const [isGeneratingTitle, setIsGeneratingTitle] = useState(false);
   const [generatingBlockId, setGeneratingBlockId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
 
   const handleGenerateAI = async (type: "title" | "content", promptText: string, blockIdx?: number) => {
     if (!promptText.trim()) return;
@@ -60,8 +75,10 @@ export default function BlogEditor({ params }: { params: Promise<{ slug: string 
 
       if (type === "title") {
         setTitle(data.text);
+        setIsDirty(true);
       } else if (type === "content" && blockIdx !== undefined) {
         updateBlock(blockIdx, { content: data.text });
+        setIsDirty(true);
       }
     } catch (error: any) {
       alert("AI Generation failed: " + error.message);
@@ -81,6 +98,10 @@ export default function BlogEditor({ params }: { params: Promise<{ slug: string 
           const data = docSnap.data();
           setTitle(data.title || "");
           setImages(data.images || []);
+          
+          if (data.status) {
+            setStatus(data.status);
+          }
           
           if (data.scheduledDate) {
             setScheduledDate(new Date(data.scheduledDate).toISOString().slice(0, 16));
@@ -105,7 +126,7 @@ export default function BlogEditor({ params }: { params: Promise<{ slug: string 
     fetchBlog();
   }, [slug, isNew]);
 
-  const handleSave = async (e?: React.FormEvent) => {
+  const handleSave = async (e?: React.FormEvent, targetStatus: "draft" | "published" = status) => {
     if (e) e.preventDefault();
     setSaving(true);
     setMessage("");
@@ -118,17 +139,21 @@ export default function BlogEditor({ params }: { params: Promise<{ slug: string 
         content: "", // We no longer use legacy content field
         blocks,
         images, // preserve to pick the featured hero image later
+        status: targetStatus,
         scheduledDate: scheduledDate ? new Date(scheduledDate).toISOString() : null,
         updatedAt: new Date().toISOString()
       };
 
       if (isNew) {
         await setDoc(docRef, payload);
-        await logAdminAction("BLOG_CREATED", auth.currentUser?.email || "Unknown", `Created new blog post: ${title}`);
+        await logAdminAction("BLOG_CREATED", auth.currentUser?.email || "Unknown", `Created new blog post: ${title} (${targetStatus})`);
+        setIsDirty(false);
         router.push(`/admin/blogs/${docId}`);
       } else {
         await updateDoc(docRef, payload);
-        setMessage("Blog saved successfully!");
+        setStatus(targetStatus);
+        setIsDirty(false);
+        setMessage(targetStatus === "published" ? "Blog published successfully!" : "Draft saved successfully!");
         setTimeout(() => setMessage(""), 3000);
       }
     } catch (error: any) {
@@ -186,29 +211,36 @@ export default function BlogEditor({ params }: { params: Promise<{ slug: string 
     newBlocks.splice(index, 0, newBlock);
     setBlocks(newBlocks);
     setActiveMenuIndex(null);
+    setIsDirty(true);
   };
 
   const updateBlock = (idx: number, updates: Partial<ContentBlock>) => {
     const newBlocks = [...blocks];
     newBlocks[idx] = { ...newBlocks[idx], ...updates };
     setBlocks(newBlocks);
+    setIsDirty(true);
   };
 
   const removeBlock = (idx: number) => {
     const newBlocks = blocks.filter((_, i) => i !== idx);
     setBlocks(newBlocks);
+    setIsDirty(true);
   };
 
   const moveBlock = (idx: number, direction: "up" | "down") => {
+    let moved = false;
     if (direction === "up" && idx > 0) {
       const newBlocks = [...blocks];
       [newBlocks[idx - 1], newBlocks[idx]] = [newBlocks[idx], newBlocks[idx - 1]];
       setBlocks(newBlocks);
+      moved = true;
     } else if (direction === "down" && idx < blocks.length - 1) {
       const newBlocks = [...blocks];
       [newBlocks[idx + 1], newBlocks[idx]] = [newBlocks[idx], newBlocks[idx + 1]];
       setBlocks(newBlocks);
+      moved = true;
     }
+    if (moved) setIsDirty(true);
   };
 
   if (loading) return (
@@ -219,11 +251,33 @@ export default function BlogEditor({ params }: { params: Promise<{ slug: string 
 
   return (
     <div className="max-w-4xl mx-auto pb-32">
+      
+      {showBackModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-slate-100">
+            <div className="flex items-center space-x-3 text-amber-500 mb-4">
+              <AlertTriangle size={24} />
+              <h3 className="text-xl font-bold text-slate-900">Unsaved Changes</h3>
+            </div>
+            <p className="text-slate-600 mb-8 font-medium">You have unsaved changes. Do you want to save them as a draft before leaving?</p>
+            <div className="flex flex-col space-y-3">
+              <button type="button" onClick={async () => { await handleSave(undefined, "draft"); setShowBackModal(false); router.push("/admin/blogs"); }} className="bg-[#6C63FF] text-white px-4 py-3 rounded-xl font-bold hover:bg-[#5b54d6] transition-colors shadow-sm">Save as Draft & Exit</button>
+              <button type="button" onClick={() => { setIsDirty(false); router.push("/admin/blogs"); }} className="bg-red-50 text-red-600 px-4 py-3 rounded-xl font-bold hover:bg-red-100 transition-colors">Discard Changes & Exit</button>
+              <button type="button" onClick={() => setShowBackModal(false)} className="bg-slate-100 text-slate-700 px-4 py-3 rounded-xl font-bold hover:bg-slate-200 transition-colors">Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
         <div className="flex items-center space-x-4">
-          <Link href="/admin/blogs" className="flex items-center justify-center w-10 h-10 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-[#6C63FF] hover:border-[#6C63FF] hover:shadow-md transition-all duration-200">
+          <button 
+            type="button"
+            onClick={() => isDirty ? setShowBackModal(true) : router.push("/admin/blogs")}
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-[#6C63FF] hover:border-[#6C63FF] hover:shadow-md transition-all duration-200"
+          >
             <ArrowLeft size={18} />
-          </Link>
+          </button>
           <div>
             <h1 className="text-3xl font-black text-[#3a356a] tracking-tight">
               {isNew ? "Create New Post" : "Edit Blog Post"}
@@ -252,7 +306,7 @@ export default function BlogEditor({ params }: { params: Promise<{ slug: string 
           <input
             type="text"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => { setTitle(e.target.value); setIsDirty(true); }}
             className="w-full bg-transparent border-none focus:ring-0 outline-none transition-all duration-200 text-[#3a356a] font-black text-4xl lg:text-5xl placeholder-slate-200"
             required
             placeholder="Post Title..."
@@ -468,7 +522,7 @@ export default function BlogEditor({ params }: { params: Promise<{ slug: string 
             <input
               type="datetime-local"
               value={scheduledDate}
-              onChange={(e) => setScheduledDate(e.target.value)}
+              onChange={(e) => { setScheduledDate(e.target.value); setIsDirty(true); }}
               className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 outline-none transition-all duration-200 font-medium text-slate-800 shadow-sm"
             />
           </div>
@@ -476,14 +530,23 @@ export default function BlogEditor({ params }: { params: Promise<{ slug: string 
 
         {/* Sticky Action Bar */}
         <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-slate-200 p-4 z-50 flex justify-end px-8">
-          <div className="max-w-4xl w-full mx-auto flex justify-end">
+          <div className="max-w-4xl w-full mx-auto flex justify-end space-x-4">
             <button
-              type="submit"
+              type="button"
+              onClick={(e) => handleSave(e, "draft")}
+              disabled={saving}
+              className="flex items-center space-x-2 bg-slate-100 text-slate-700 px-8 py-4 rounded-full hover:bg-slate-200 disabled:opacity-50 transition-all duration-300 font-bold tracking-wide shadow-sm"
+            >
+              <span>Save as Draft</span>
+            </button>
+            <button
+              type="button"
+              onClick={(e) => handleSave(e, "published")}
               disabled={saving}
               className="flex items-center space-x-2 bg-[#6C63FF] text-white px-10 py-4 rounded-full hover:bg-[#5b54d6] disabled:opacity-50 transition-all duration-300 font-bold tracking-wide shadow-lg hover:-translate-y-1"
             >
               <Save size={20} />
-              <span>{saving ? "Saving..." : (isNew ? "Publish New Post" : "Save Post Changes")}</span>
+              <span>{saving ? "Saving..." : (isNew ? "Publish New Post" : "Publish Changes")}</span>
             </button>
           </div>
         </div>

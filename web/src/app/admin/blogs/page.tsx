@@ -11,6 +11,7 @@ interface BlogDoc {
   title: string;
   updatedAt: string;
   scheduledDate?: string;
+  status?: string;
 }
 
 export default function AdminBlogsList() {
@@ -29,6 +30,7 @@ export default function AdminBlogsList() {
             title: data.title || doc.id,
             updatedAt: data.updatedAt,
             scheduledDate: data.scheduledDate,
+            status: data.status,
           };
         });
         setBlogs(blogsData.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()));
@@ -87,6 +89,7 @@ export default function AdminBlogsList() {
             <tbody className="divide-y divide-slate-100">
               {blogs.map((blog) => {
                 const isScheduled = blog.scheduledDate && new Date(blog.scheduledDate) > new Date();
+                const isDraft = blog.status === "draft";
                 return (
                   <tr key={blog.slug} className="hover:bg-slate-50/80 transition-colors group">
                     <td className="px-6 py-5">
@@ -98,7 +101,12 @@ export default function AdminBlogsList() {
                       </div>
                     </td>
                     <td className="px-6 py-5">
-                      {isScheduled ? (
+                      {isDraft ? (
+                        <span className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 border border-slate-200 text-slate-700">
+                          <FileText size={14} />
+                          <span>Draft</span>
+                        </span>
+                      ) : isScheduled ? (
                         <span className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-50 border border-amber-200 text-amber-700">
                           <Clock size={14} />
                           <span>Scheduled: {new Date(blog.scheduledDate!).toLocaleDateString()}</span>
