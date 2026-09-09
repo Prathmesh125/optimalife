@@ -4,37 +4,24 @@ import { useAuth } from "@/context/AuthContext";
 import { FileText, FileImage, Briefcase, TrendingUp, Users, Eye } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { collection, getCountFromServer } from "firebase/firestore";
+import { collection, getCountFromServer, getDocs, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase/client";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-
-const trafficData = [
-  { name: '1 Sep', views: 400 },
-  { name: '2 Sep', views: 650 },
-  { name: '3 Sep', views: 300 },
-  { name: '4 Sep', views: 850 },
-  { name: '5 Sep', views: 550 },
-  { name: '6 Sep', views: 900 },
-  { name: '7 Sep', views: 450 },
-  { name: '8 Sep', views: 750 },
-  { name: '9 Sep', views: 500 },
-  { name: '10 Sep', views: 950 },
-  { name: '11 Sep', views: 600 },
-  { name: '12 Sep', views: 800 },
-];
 
 export default function AdminDashboard() {
   const { user } = useAuth();
   const [metrics, setMetrics] = useState({ pages: 0, blogs: 0, applications: 0 });
+  const [trafficData, setTrafficData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchMetrics() {
       try {
-        const [pagesSnap, blogsSnap, appsSnap] = await Promise.all([
+        const [pagesSnap, blogsSnap, appsSnap, trafficSnap] = await Promise.all([
           getCountFromServer(collection(db, "pages")),
           getCountFromServer(collection(db, "blog_posts")),
           getCountFromServer(collection(db, "applications")),
+          getDocs(query(collection(db, "website_traffic"), orderBy("date", "asc"))),
         ]);
 
         setMetrics({
@@ -42,6 +29,12 @@ export default function AdminDashboard() {
           blogs: blogsSnap.data().count,
           applications: appsSnap.data().count,
         });
+
+        const traffic = trafficSnap.docs.map(doc => {
+          const data = doc.data();
+          return { name: data.date, views: data.views };
+        });
+        setTrafficData(traffic);
       } catch (error) {
         console.error("Error fetching metrics:", error);
       } finally {
@@ -121,25 +114,29 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="h-[300px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={trafficData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
-              <defs>
-                <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#2563eb" stopOpacity={0.1}/>
-                  <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
-              <Tooltip 
-                contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                itemStyle={{ color: '#0f172a', fontWeight: 600 }}
-              />
-              <Area type="monotone" dataKey="views" stroke="#2563eb" strokeWidth={3} fillOpacity={1} fill="url(#colorViews)" />
-            </AreaChart>
-          </ResponsiveContainer>
+        <div className="h-[300px] w-full flex items-center justify-center border-t border-slate-100 pt-8 mt-2">
+          {trafficData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={trafficData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.1}/>
+                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  itemStyle={{ color: '#0f172a', fontWeight: 600 }}
+                />
+                <Area type="monotone" dataKey="views" stroke="#2563eb" strokeWidth={3} fillOpacity={1} fill="url(#colorViews)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="text-slate-400 font-medium">No traffic data available.</div>
+          )}
         </div>
       </div>
 
