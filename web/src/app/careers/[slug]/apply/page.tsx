@@ -24,6 +24,7 @@ export default function ApplyPage({ params }: { params: Promise<{ slug: string }
   
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [parsing, setParsing] = useState(false);
+  const [resumeText, setResumeText] = useState("");
   
   // Dynamic form state
   const [formData, setFormData] = useState<Record<string, string>>({});
@@ -89,6 +90,7 @@ export default function ApplyPage({ params }: { params: Promise<{ slug: string }
       if (result.success && result.data) {
         // Merge AI parsed data with existing form data (if any)
         setFormData(prev => ({ ...prev, ...result.data }));
+        if (result.rawText) setResumeText(result.rawText);
       } else {
         console.error("Parse Error:", result.error);
         alert("AI Parsing Warning: " + (result.error || "Failed to parse resume automatically. Please fill the fields manually."));
@@ -116,6 +118,7 @@ export default function ApplyPage({ params }: { params: Promise<{ slug: string }
     const submitData = new FormData();
     submitData.append("jobId", job.title);
     submitData.append("resume", resumeFile);
+    if (resumeText) submitData.append("resumeText", resumeText);
     
     // If standard template, map the keys expected by applyJob.ts
     if (job.useTemplate === "standard" || !job.useTemplate) {

@@ -5,7 +5,7 @@ import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase/client";
 import { logAdminAction } from "@/lib/logger";
 import { useRouter } from "next/navigation";
-import { Save, ArrowLeft, Briefcase, Calendar, CheckCircle2, Plus, Trash2, GripVertical, Settings2, FileText, CheckSquare, Type, Sparkles, Loader2 } from "lucide-react";
+import { Save, ArrowLeft, Briefcase, Calendar, CheckCircle2, Plus, Trash2, GripVertical, Settings2, FileText, CheckSquare, Type, Sparkles, Loader2, X, Tag } from "lucide-react";
 import Link from "next/link";
 
 export default function JobEditor({ params }: { params: Promise<{ id: string }> }) {
@@ -28,6 +28,8 @@ export default function JobEditor({ params }: { params: Promise<{ id: string }> 
   
   const [useTemplate, setUseTemplate] = useState<"standard" | "custom">("custom");
   const [formFields, setFormFields] = useState<any[]>([]);
+  const [requiredSkills, setRequiredSkills] = useState<string[]>([]);
+  const [skillInput, setSkillInput] = useState("");
 
   useEffect(() => {
     if (isNew) return;
@@ -54,6 +56,7 @@ export default function JobEditor({ params }: { params: Promise<{ id: string }> 
           
           setUseTemplate("custom");
           setFormFields(data.formFields || []);
+          setRequiredSkills(data.requiredSkills || []);
         } else {
           setMessage("Job not found.");
         }
@@ -93,6 +96,7 @@ export default function JobEditor({ params }: { params: Promise<{ id: string }> 
         type,
         useTemplate: "custom",
         formFields: formFields,
+        requiredSkills: requiredSkills,
         updatedAt: new Date().toISOString()
       };
 
@@ -282,6 +286,65 @@ export default function JobEditor({ params }: { params: Promise<{ id: string }> 
             placeholder="Write job description here, or just type a title above and click 'AI Auto-Write'..."
             required
           />
+        </div>
+
+        {/* Required Skills Section */}
+        <div className="bg-white p-8 rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.02)] border border-slate-100">
+          <div className="flex items-center space-x-2 mb-2">
+            <Tag className="text-emerald-500" size={20} />
+            <h3 className="text-xl font-extrabold text-[#3a356a]">Required Skills</h3>
+          </div>
+          <p className="text-sm text-slate-500 mb-5 font-medium">Add skills the candidate must have. These will be used by AI to rank and match applicants automatically.</p>
+          
+          {/* Tags Display */}
+          <div className="flex flex-wrap gap-2 mb-4 min-h-[40px]">
+            {requiredSkills.map((skill, idx) => (
+              <span key={idx} className="inline-flex items-center space-x-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 text-sm font-bold px-3 py-1.5 rounded-full">
+                <span>{skill}</span>
+                <button type="button" onClick={() => setRequiredSkills(prev => prev.filter((_, i) => i !== idx))} className="text-indigo-400 hover:text-red-500 transition-colors">
+                  <X size={12} />
+                </button>
+              </span>
+            ))}
+            {requiredSkills.length === 0 && (
+              <span className="text-slate-400 text-sm italic">No skills added yet...</span>
+            )}
+          </div>
+
+          {/* Skill Input */}
+          <div className="flex space-x-3">
+            <input
+              type="text"
+              value={skillInput}
+              onChange={(e) => setSkillInput(e.target.value)}
+              onKeyDown={(e) => {
+                if ((e.key === "Enter" || e.key === ",") && skillInput.trim()) {
+                  e.preventDefault();
+                  const s = skillInput.trim().replace(/,$/, "");
+                  if (s && !requiredSkills.includes(s)) {
+                    setRequiredSkills(prev => [...prev, s]);
+                  }
+                  setSkillInput("");
+                }
+              }}
+              className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition-all duration-200 text-slate-800 font-medium shadow-sm"
+              placeholder="e.g. Flutter, REST API, Firebase (press Enter to add)"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                const s = skillInput.trim().replace(/,$/, "");
+                if (s && !requiredSkills.includes(s)) {
+                  setRequiredSkills(prev => [...prev, s]);
+                }
+                setSkillInput("");
+              }}
+              className="px-5 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold transition-colors shadow-sm flex items-center space-x-2"
+            >
+              <Plus size={18} />
+              <span>Add</span>
+            </button>
+          </div>
         </div>
 
         {/* Form Builder Block */}

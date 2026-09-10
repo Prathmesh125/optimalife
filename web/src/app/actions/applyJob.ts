@@ -10,11 +10,12 @@ export async function submitApplication(formData: FormData) {
     const email = formData.get("email") as string;
     const phone = formData.get("phone") as string;
     const resumeFile = formData.get("resume") as File | null;
+    const resumeText = formData.get("resumeText") as string | null;
     
     // Extract any dynamic fields
     const dynamicData: Record<string, string> = {};
     formData.forEach((value, key) => {
-      if (typeof value === "string" && !["jobId", "name", "email", "phone", "resume"].includes(key)) {
+      if (typeof value === "string" && !["jobId", "name", "email", "phone", "resume", "resumeText"].includes(key)) {
         dynamicData[key] = value;
       }
     });
@@ -56,6 +57,7 @@ export async function submitApplication(formData: FormData) {
       applicantEmail: email,
       applicantPhone: phone || "",
       resumeUrl,
+      resumeText: resumeText || "",
       dynamicData,
       submittedAt: new Date().toISOString(),
     });

@@ -106,7 +106,7 @@ For dropdowns/select fields, try to match the closest option if options are prov
     }
 
     const parsedData = JSON.parse(cleanJson);
-    return NextResponse.json({ success: true, data: parsedData });
+    return NextResponse.json({ success: true, data: parsedData, rawText: extractedText.substring(0, 5000) });
     
   } catch (error: any) {
     console.error("Parse Resume Error:", error);
