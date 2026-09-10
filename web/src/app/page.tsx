@@ -231,8 +231,8 @@ export default async function Home() {
         )}
 
         {/* Dynamic custom blocks */}
-        {data?.pageBlocks?.length > 0 && (
-          <PageBlocks blocks={data.pageBlocks} />
+        {(data?.pageBlocks?.length ?? 0) > 0 && (
+          <PageBlocks blocks={data!.pageBlocks} />
         )}
 
       </main>
