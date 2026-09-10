@@ -7,6 +7,7 @@ import HeroCarousel from "@/components/ui/HeroCarousel";
 import CertificationsCarousel from "@/components/ui/CertificationsCarousel";
 import GlobalMap from "@/components/ui/GlobalMap";
 import AnimatedStat from "@/components/ui/AnimatedStat";
+import PageBlocks from "@/components/ui/PageBlocks";
 
 export const dynamic = "force-dynamic";
 
@@ -227,6 +228,11 @@ export default async function Home() {
               </div>
             </div>
           </section>
+        )}
+
+        {/* Dynamic custom blocks */}
+        {data?.pageBlocks?.length > 0 && (
+          <PageBlocks blocks={data.pageBlocks} />
         )}
 
       </main>

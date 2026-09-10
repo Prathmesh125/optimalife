@@ -4,8 +4,9 @@ import { useEffect, useState, use, useRef } from "react";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/client";
 import { useRouter } from "next/navigation";
-import { Save, ArrowLeft, Image as ImageIcon, FileText, CheckCircle2, UploadCloud, Trash2, Loader2, LayoutTemplate } from "lucide-react";
+import { Save, ArrowLeft, Image as ImageIcon, FileText, CheckCircle2, UploadCloud, Trash2, Loader2, LayoutTemplate, Layers } from "lucide-react";
 import Link from "next/link";
+import PageBlockEditor, { PageBlock } from "@/components/admin/PageBlockEditor";
 
 interface PageImage {
   filename: string;
@@ -26,6 +27,7 @@ export default function PageEditor({ params }: { params: Promise<{ slug: string 
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
+  const [pageBlocks, setPageBlocks] = useState<PageBlock[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -39,6 +41,7 @@ export default function PageEditor({ params }: { params: Promise<{ slug: string 
           setContent(data.content || "");
           setSections(data.sections || null);
           setImages(data.images || []);
+          setPageBlocks(data.pageBlocks || []);
         } else {
           setMessage("Page not found.");
         }
@@ -60,6 +63,7 @@ export default function PageEditor({ params }: { params: Promise<{ slug: string 
       const payload: any = {
         title,
         images,
+        pageBlocks,
         updatedAt: new Date().toISOString()
       };
       
@@ -758,6 +762,35 @@ export default function PageEditor({ params }: { params: Promise<{ slug: string 
               ))}
             </div>
           )}
+        </div>
+
+        {/* ===== DYNAMIC PAGE BLOCKS EDITOR ===== */}
+        <div className="bg-white p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-1 h-full bg-[#6C63FF]"></div>
+          <div className="flex items-center space-x-2 mb-2">
+            <Layers className="text-[#6C63FF]" size={20} />
+            <h2 className="text-xl font-extrabold text-slate-800">Custom Page Content</h2>
+          </div>
+          <p className="text-sm text-slate-500 font-medium mb-6">
+            Add, reorder, or delete content blocks that appear on the live page below the existing sections. Supports headings, text, images, two-column layouts, and dividers.
+          </p>
+          <PageBlockEditor
+            blocks={pageBlocks}
+            onChange={setPageBlocks}
+            images={images}
+            slug={slug}
+            onUpload={async (file) => {
+              const fd = new FormData();
+              fd.append("file", file);
+              fd.append("folder", `pages/${slug}`);
+              const res = await fetch("/api/upload", { method: "POST", body: fd });
+              const data = await res.json();
+              if (!res.ok) { alert("Upload failed: " + data.error); return null; }
+              const newImg = { filename: data.filename, url: data.url };
+              setImages(prev => [...prev, newImg]);
+              return data.url;
+            }}
+          />
         </div>
 
         <div className="flex justify-end sticky bottom-8 z-10">

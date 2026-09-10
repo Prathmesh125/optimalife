@@ -4,6 +4,7 @@ import Footer from "@/components/layout/Footer";
 import { Mail, Phone, MapPin } from "lucide-react";
 import { notFound } from "next/navigation";
 import ContactForm from "@/components/ui/ContactForm";
+import PageBlocks from "@/components/ui/PageBlocks";
 
 export const revalidate = 0;
 
@@ -119,6 +120,12 @@ export default async function ContactPage() {
 
           </div>
         </div>
+
+        {/* Dynamic custom blocks */}
+        {page?.pageBlocks?.length > 0 && (
+          <PageBlocks blocks={page.pageBlocks} />
+        )}
+
       </main>
 
       <Footer />

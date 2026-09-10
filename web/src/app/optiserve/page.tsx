@@ -4,6 +4,7 @@ import Footer from "@/components/layout/Footer";
 import ReactMarkdown from "react-markdown";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import PageBlocks from "@/components/ui/PageBlocks";
 
 export const revalidate = 0;
 
@@ -172,6 +173,11 @@ export default async function OptiservePage() {
 
             </div>
           </section>
+        )}
+
+        {/* Dynamic custom blocks */}
+        {page?.pageBlocks?.length > 0 && (
+          <PageBlocks blocks={page.pageBlocks} />
         )}
 
       </main>

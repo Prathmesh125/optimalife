@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { Target, Lightbulb, Home } from "lucide-react";
 import Link from "next/link";
+import PageBlocks from "@/components/ui/PageBlocks";
 
 export const revalidate = 0;
 
@@ -202,6 +203,11 @@ export default async function AboutUsPage() {
               )}
             </div>
           </section>
+        )}
+
+        {/* Dynamic custom blocks */}
+        {page?.pageBlocks?.length > 0 && (
+          <PageBlocks blocks={page.pageBlocks} />
         )}
 
       </main>
