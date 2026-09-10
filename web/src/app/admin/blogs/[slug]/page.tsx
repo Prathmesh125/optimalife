@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use, useRef } from "react";
+import { useEffect, useState, use, useRef, useCallback } from "react";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase/client";
 import { logAdminAction } from "@/lib/logger";
@@ -45,6 +45,20 @@ export default function BlogEditor({ params }: { params: Promise<{ slug: string 
 
   const [isGeneratingTitle, setIsGeneratingTitle] = useState(false);
   const [generatingBlockId, setGeneratingBlockId] = useState<string | null>(null);
+
+  // Map of block.id -> textarea DOM element for auto-resizing
+  const textareaRefs = useRef<Map<string, HTMLTextAreaElement>>(new Map());
+
+  const resizeTextarea = useCallback((el: HTMLTextAreaElement | null) => {
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+  }, []);
+
+  // Re-run resize whenever blocks content changes (including after AI injection)
+  useEffect(() => {
+    textareaRefs.current.forEach((el) => resizeTextarea(el));
+  }, [blocks, resizeTextarea]);
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -360,15 +374,21 @@ export default function BlogEditor({ params }: { params: Promise<{ slug: string 
                   {block.type === "text" && (
                     <div className="relative group/text">
                       <textarea
+                        ref={(el) => {
+                          if (el) {
+                            textareaRefs.current.set(block.id, el);
+                            resizeTextarea(el);
+                          } else {
+                            textareaRefs.current.delete(block.id);
+                          }
+                        }}
                         value={block.content || ""}
-                        onChange={(e) => updateBlock(idx, { content: e.target.value })}
-                        rows={Math.max(3, (block.content?.split("\n").length || 1))}
+                        onChange={(e) => {
+                          updateBlock(idx, { content: e.target.value });
+                          resizeTextarea(e.currentTarget);
+                        }}
                         className={`w-full bg-transparent border-none focus:ring-0 outline-none font-sans text-lg text-slate-700 leading-loose placeholder-slate-300 resize-none overflow-hidden transition-opacity ${generatingBlockId === block.id ? 'opacity-50' : 'opacity-100'}`}
                         placeholder="Write your paragraph or rough keywords here..."
-                        onInput={(e) => {
-                          e.currentTarget.style.height = 'auto';
-                          e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px';
-                        }}
                       />
                       <button
                         type="button"
