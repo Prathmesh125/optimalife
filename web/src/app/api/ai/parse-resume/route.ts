@@ -23,12 +23,18 @@ export async function POST(req: Request) {
     const fileName = resumeFile.name.toLowerCase();
     
     if (fileName.endsWith('.pdf') || resumeFile.type === 'application/pdf') {
-      if (typeof global.DOMMatrix === 'undefined') {
-        (global as any).DOMMatrix = class DOMMatrix {};
-      }
-      const pdfParse = require("pdf-parse");
-      const pdfData = await pdfParse(buffer);
-      extractedText = pdfData.text;
+      const PDFParser = require("pdf2json");
+      
+      extractedText = await new Promise((resolve, reject) => {
+        const pdfParser = new PDFParser(this, 1);
+        
+        pdfParser.on("pdfParser_dataError", (errData: any) => reject(errData.parserError));
+        pdfParser.on("pdfParser_dataReady", () => {
+          resolve(pdfParser.getRawTextContent());
+        });
+        
+        pdfParser.parseBuffer(buffer);
+      });
     } else if (fileName.endsWith('.docx') || resumeFile.type.includes('wordprocessingml')) {
       const docxData = await mammoth.extractRawText({ buffer });
       extractedText = docxData.value;
