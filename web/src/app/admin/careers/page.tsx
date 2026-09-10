@@ -88,7 +88,9 @@ export default function AdminCareersList() {
                       <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500">
                         <Briefcase size={18} />
                       </div>
-                      <span className="font-bold text-slate-800">{job.title.toUpperCase()}</span>
+                      <Link href={`/admin/careers/${job.id}/applicants`} className="font-bold text-[#3a356a] hover:text-[#6C63FF] hover:underline underline-offset-4 transition-all">
+                        {job.title.toUpperCase()}
+                      </Link>
                     </div>
                   </td>
                   <td className="px-6 py-5">
@@ -108,6 +110,13 @@ export default function AdminCareersList() {
                     {job.updatedAt ? new Date(job.updatedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A'}
                   </td>
                   <td className="px-6 py-5 text-right">
+                    <Link
+                      href={`/admin/careers/${job.id}/applicants`}
+                      className="inline-flex items-center justify-center w-10 h-10 mr-2 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-500 hover:bg-[#6C63FF] hover:text-white hover:border-[#6C63FF] hover:shadow-md transition-all duration-200"
+                      title="View Applicants"
+                    >
+                      <Users size={16} />
+                    </Link>
                     <Link
                       href={`/admin/careers/${job.id}`}
                       className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-[#6C63FF] hover:border-[#6C63FF] hover:shadow-md transition-all duration-200"
