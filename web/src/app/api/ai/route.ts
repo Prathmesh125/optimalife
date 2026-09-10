@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
+import { aiRateLimiter } from "@/lib/rateLimit";
 
 export async function POST(req: Request) {
   try {
+    const ip = req.headers.get("x-forwarded-for") || "unknown";
+    if (aiRateLimiter.isRateLimited(ip)) {
+      return NextResponse.json({ error: "Rate limit exceeded. Please wait a minute before trying again." }, { status: 429 });
+    }
+
     const { prompt, type } = await req.json();
 
     if (!prompt) {
@@ -43,6 +49,7 @@ export async function POST(req: Request) {
         generationConfig: {
           temperature: 0.9,
           topP: 0.95,
+          maxOutputTokens: 800,
         }
       }),
     });

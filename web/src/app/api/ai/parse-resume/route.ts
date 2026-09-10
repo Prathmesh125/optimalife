@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
 import mammoth from "mammoth";
+import { aiRateLimiter } from "@/lib/rateLimit";
 
 export async function POST(req: Request) {
   try {
+    const ip = req.headers.get("x-forwarded-for") || "unknown";
+    if (aiRateLimiter.isRateLimited(ip)) {
+      return NextResponse.json({ error: "Rate limit exceeded. Please wait a minute before trying again." }, { status: 429 });
+    }
+
     const formData = await req.formData();
     const resumeFile = formData.get("resume") as File;
     const formSchemaStr = formData.get("schema") as string;
@@ -74,6 +80,7 @@ For dropdowns/select fields, try to match the closest option if options are prov
         ],
         generationConfig: {
           temperature: 0.1, // low temperature for precise extraction
+          maxOutputTokens: 500,
         }
       }),
     });
