@@ -5,6 +5,8 @@ import ReactMarkdown from "react-markdown";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: "Optiserve | Optima Life Sciences",
   description: "Unique product technologies and consulting that support poultry health, diagnostics, and performance in every stage of production.",

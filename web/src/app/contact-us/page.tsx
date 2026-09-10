@@ -5,6 +5,8 @@ import { Mail, Phone, MapPin } from "lucide-react";
 import { notFound } from "next/navigation";
 import ContactForm from "@/components/ui/ContactForm";
 
+export const revalidate = 0;
+
 export const metadata = {
   title: "Contact Us | Optima Life Sciences",
   description: "Get in touch with Optima Life Sciences for inquiries regarding feed additives and bio-security products.",

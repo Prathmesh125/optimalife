@@ -7,6 +7,8 @@ import type { Metadata } from "next";
 import { Target, Lightbulb, Home } from "lucide-react";
 import Link from "next/link";
 
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: "About Us | Optima Life Sciences",
   description: "Learn about Optima Life Sciences' mission, vision, and journey in the animal health and nutrition sector.",
