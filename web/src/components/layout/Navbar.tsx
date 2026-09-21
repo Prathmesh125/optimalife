@@ -5,24 +5,33 @@ import { useState, useEffect } from "react";
 import { Menu, X, ChevronDown, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
-
-const productCategories = [
-  {
-    name: "Feed Additives",
-    href: "/products#feed-additives",
-    subcategories: [
-      { name: "Cost-Effective Performance Solutions", href: "/products#cost-effective" },
-      { name: "Gut Health Solutions", href: "/products#gut-health" },
-      { name: "Enzyme Solutions", href: "/products#enzyme" },
-      { name: "Mineral Solutions", href: "/products#mineral" },
-      { name: "Feed Quality Milling Solutions", href: "/products#feed-quality" },
-    ],
-  },
-  { name: "Bio Security", href: "/products#bio-security" },
-  { name: "Dosing System", href: "/products#dosing-system" },
-];
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { db } from "@/lib/firebase/client";
 
 export default function Navbar() {
+  const [productCategories, setProductCategories] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const q = query(collection(db, "productCategories"), orderBy("order", "asc"));
+        const snapshot = await getDocs(q);
+        const cats = snapshot.docs.map(doc => ({
+          id: doc.id,
+          name: doc.data().name,
+          href: `/products#${doc.id}`,
+          subcategories: doc.data().subcategories?.map((sub: any) => ({
+            name: sub.name,
+            href: `/products#${sub.id}`
+          })) || []
+        }));
+        setProductCategories(cats);
+      } catch (error) {
+        console.error("Error fetching categories for navbar:", error);
+      }
+    }
+    fetchCategories();
+  }, []);
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();

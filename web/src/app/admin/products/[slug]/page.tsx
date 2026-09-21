@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, collection, getDocs } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase/client";
 import { logAdminAction } from "@/lib/logger";
 import { useRouter } from "next/navigation";
@@ -31,6 +31,21 @@ export default function ProductEditor({ params }: { params: Promise<{ slug: stri
   
   // To deal with legacy images array if present
   const [imagesArray, setImagesArray] = useState<any[]>([]);
+
+  const [categories, setCategories] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const querySnapshot = await getDocs(collection(db, "productCategories"));
+        const cats = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setCategories(cats.sort((a: any, b: any) => (a.order || 0) - (b.order || 0)));
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    }
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     if (isNew) return;
@@ -69,6 +84,18 @@ export default function ProductEditor({ params }: { params: Promise<{ slug: stri
     }
     fetchProduct();
   }, [slug, isNew]);
+
+  // Set default category and subcategory from URL if creating new
+  useEffect(() => {
+    if (isNew) {
+      const searchParams = new URLSearchParams(window.location.search);
+      const cat = searchParams.get('category');
+      const sub = searchParams.get('subcategory');
+      if (cat) setCategory(cat);
+      if (sub) setSubCategory(sub);
+      setLoading(false); // Stop loading if new
+    }
+  }, [isNew]);
 
   const handleSave = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -150,13 +177,16 @@ export default function ProductEditor({ params }: { params: Promise<{ slug: stri
     </div>
   );
 
+  const selectedCategoryObj = categories.find(c => c.id === category);
+  const availableSubcategories = selectedCategoryObj?.subcategories || [];
+
   return (
     <div className="max-w-4xl mx-auto pb-32">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
         <div className="flex items-center space-x-4">
           <button 
             type="button"
-            onClick={() => router.push("/admin/products")}
+            onClick={() => router.push(category ? `/admin/products/items?category=${category}` : "/admin/products")}
             className="flex items-center justify-center w-10 h-10 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-[#6C63FF] hover:border-[#6C63FF] hover:shadow-md transition-all duration-200"
           >
             <ArrowLeft size={18} />
@@ -200,18 +230,17 @@ export default function ProductEditor({ params }: { params: Promise<{ slug: stri
               <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wider">Category *</label>
               <select
                 value={category}
-                onChange={(e) => { setCategory(e.target.value); setIsDirty(true); }}
+                onChange={(e) => { setCategory(e.target.value); setSubCategory(""); setIsDirty(true); }}
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-[#6C63FF]/30 focus:border-[#6C63FF] outline-none transition-all font-bold text-[#3a356a]"
               >
-                <option value="feed-additives">Feed Additives</option>
-                <option value="bio-security">Bio Security</option>
-                <option value="dosing-system">Dosing System</option>
-                <option value="optiserve">Optiserve</option>
+                {categories.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
               </select>
             </div>
           </div>
 
-          {category === "feed-additives" && (
+          {availableSubcategories.length > 0 && (
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wider">Sub Category</label>
               <select
@@ -219,12 +248,10 @@ export default function ProductEditor({ params }: { params: Promise<{ slug: stri
                 onChange={(e) => { setSubCategory(e.target.value); setIsDirty(true); }}
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-[#6C63FF]/30 focus:border-[#6C63FF] outline-none transition-all font-bold text-[#3a356a]"
               >
-                <option value="">None</option>
-                <option value="cost-effective">Cost Effective Performance Solutions</option>
-                <option value="gut-health">Gut Health Solutions</option>
-                <option value="enzyme">Enzyme Solutions</option>
-                <option value="feed-quality">Feed Quality and Milling Solutions</option>
-                <option value="mineral">Mineral Solutions</option>
+                <option value="">None (All)</option>
+                {availableSubcategories.map((sub: any) => (
+                  <option key={sub.id} value={sub.id}>{sub.name}</option>
+                ))}
               </select>
             </div>
           )}

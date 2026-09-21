@@ -5,42 +5,9 @@ import Link from "next/link";
 import { ArrowRight, Package, Shield, Beaker, Zap, Settings, Search } from "lucide-react";
 import { motion } from "framer-motion";
 
-const CATEGORIES = [
-  { 
-    id: "feed-additives", 
-    name: "Feed Additives", 
-    icon: Package,
-    description: "Our feed additives take complete care of the nutritional quality of a feed; these depend on a number of factors that include feed presentation, microbial contamination, anti-nutritional factors, digestibility, palatability and intestinal healthfulness. We know that great ingredients are not enough, we are passionate about developing formulations that will keep your animals and birds in optimum shape."
-  },
-  { 
-    id: "bio-security", 
-    name: "Bio Security", 
-    icon: Shield,
-    description: "Our biosecurity products are scientifically designed to protect your facility from harmful pathogens and ensure a safe, healthy environment for livestock."
-  },
-  { 
-    id: "dosing-system", 
-    name: "Dosing System", 
-    icon: Settings,
-    description: "Advanced dosing systems for precise and reliable delivery of treatments and supplements directly into water lines, minimizing waste and maximizing efficiency."
-  },
-  { 
-    id: "optiserve", 
-    name: "Optiserve", 
-    icon: Zap,
-    description: "Comprehensive analytical and consulting services dedicated to optimizing performance and diagnosing critical challenges in your operations."
-  },
-];
+import * as Icons from "lucide-react";
 
-const SUB_CATEGORIES = [
-  { id: "cost-effective", name: "COST EFFECTIVE PERFORMANCE SOLUTIONS", category: "feed-additives" },
-  { id: "gut-health", name: "GUT HEALTH SOLUTIONS", category: "feed-additives" },
-  { id: "enzyme", name: "ENZYME SOLUTIONS", category: "feed-additives" },
-  { id: "feed-quality", name: "FEED QUALITY AND MILLING SOLUTIONS", category: "feed-additives" },
-  { id: "mineral", name: "MINERAL SOLUTIONS", category: "feed-additives" },
-];
-
-export default function ProductShowcase({ products }: { products: any[] }) {
+export default function ProductShowcase({ products, categories = [] }: { products: any[], categories: any[] }) {
   const [activeCategory, setActiveCategory] = useState("feed-additives");
   const [activeSubCategory, setActiveSubCategory] = useState<string | null>(null);
 
@@ -50,8 +17,8 @@ export default function ProductShowcase({ products }: { products: any[] }) {
     setActiveSubCategory(null);
   };
 
-  const currentCategoryObj = CATEGORIES.find(c => c.id === activeCategory);
-  const currentSubCategories = SUB_CATEGORIES.filter(s => s.category === activeCategory);
+  const currentCategoryObj = categories.find(c => c.id === activeCategory);
+  const currentSubCategories = currentCategoryObj?.subcategories || [];
 
   // Filter products based on selected category and subcategory
   const filteredProducts = products.filter(p => {
@@ -77,8 +44,9 @@ export default function ProductShowcase({ products }: { products: any[] }) {
       <section className="relative z-20 -mt-24 mb-16 px-6">
         <div className="container mx-auto max-w-5xl">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            {CATEGORIES.map(cat => {
+            {categories.map(cat => {
               const isActive = activeCategory === cat.id;
+              const IconComp = (Icons as any)[cat.icon] || Icons.Folder;
               return (
                 <button 
                   onClick={() => handleCategoryChange(cat.id)}
@@ -92,7 +60,7 @@ export default function ProductShowcase({ products }: { products: any[] }) {
                   <div className={`h-20 w-20 mb-4 flex items-center justify-center transition-transform group-hover:scale-110
                     ${isActive ? "text-white" : "text-[#7B73C7]"}
                   `}>
-                     <cat.icon size={48} />
+                     <IconComp size={48} />
                   </div>
                   <h3 className={`text-[13px] font-bold uppercase tracking-wide text-center
                     ${isActive ? "text-white" : "text-[#3a356a]"}

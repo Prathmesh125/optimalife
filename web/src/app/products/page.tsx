@@ -23,8 +23,17 @@ async function getProducts() {
     .filter(p => !invalidSlugs.includes(p.id) && !p.id.startsWith('products_feed-additives')); 
 }
 
+async function getCategories() {
+  const snapshot = await adminDb.collection("productCategories").orderBy("order", "asc").get();
+  return snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  })) as any[];
+}
+
 export default async function ProductsIndexPage() {
   const products = await getProducts();
+  const categories = await getCategories();
   
   const pageDoc = await adminDb.collection("pages").doc("products").get();
   const pageData = pageDoc.exists ? pageDoc.data() : null;
@@ -75,7 +84,7 @@ export default async function ProductsIndexPage() {
         </section>
 
         {/* ================= DYNAMIC PRODUCT SHOWCASE ================= */}
-        <ProductShowcase products={products} />
+        <ProductShowcase products={products} categories={categories} />
 
       </main>
 
