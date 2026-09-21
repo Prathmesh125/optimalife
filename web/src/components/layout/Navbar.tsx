@@ -2,9 +2,25 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ChevronDown, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
+
+const productCategories = [
+  {
+    name: "Feed Additives",
+    href: "/products#feed-additives",
+    subcategories: [
+      { name: "Cost-Effective Performance Solutions", href: "/products#cost-effective" },
+      { name: "Gut Health Solutions", href: "/products#gut-health" },
+      { name: "Enzyme Solutions", href: "/products#enzyme" },
+      { name: "Mineral Solutions", href: "/products#mineral" },
+      { name: "Feed Quality Milling Solutions", href: "/products#feed-quality" },
+    ],
+  },
+  { name: "Bio Security", href: "/products#bio-security" },
+  { name: "Dosing System", href: "/products#dosing-system" },
+];
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -22,7 +38,7 @@ export default function Navbar() {
   const navLinks = [
     { name: "Home", href: "/" },
     { name: "About us", href: "/about-us" },
-    { name: "Products", href: "/products" },
+    { name: "Products", href: "/products", hasDropdown: true },
     { name: "Optiserve", href: "/optiserve" },
     { name: "Careers", href: "/careers" },
     { name: "Blogs", href: "/blogs" },
@@ -47,7 +63,56 @@ export default function Navbar() {
         {/* Desktop Nav */}
         <nav className="hidden lg:flex items-center space-x-2">
           {navLinks.map((link) => {
-            const isActive = pathname === link.href;
+            const isActive = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href));
+            
+            if (link.hasDropdown) {
+              return (
+                <div key={link.name} className="relative group">
+                  <Link
+                    href={link.href}
+                    className={`flex items-center px-5 py-2 rounded-full font-semibold text-[15px] transition-all ${
+                      isActive 
+                        ? "bg-[var(--color-primary)] text-white" 
+                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    }`}
+                  >
+                    {link.name}
+                    <ChevronDown size={14} className="ml-1 opacity-70 group-hover:rotate-180 transition-transform duration-300" />
+                  </Link>
+
+                  {/* Level 1 Dropdown */}
+                  <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-slate-100 shadow-xl rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden transform origin-top-left group-hover:scale-100 scale-95">
+                    {productCategories.map((category) => (
+                      <div key={category.name} className="relative group/sub">
+                        <Link 
+                          href={category.href}
+                          className="flex items-center justify-between px-5 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-[var(--color-primary)] transition-colors border-b border-slate-50 last:border-0"
+                        >
+                          {category.name}
+                          {category.subcategories && <ChevronRight size={14} className="opacity-50" />}
+                        </Link>
+                        
+                        {/* Level 2 Dropdown (Subcategories) */}
+                        {category.subcategories && (
+                          <div className="absolute top-0 left-full w-64 bg-white border border-slate-100 shadow-xl rounded-xl opacity-0 invisible group-hover/sub:opacity-100 group-hover/sub:visible transition-all duration-200 z-50 overflow-hidden -ml-2">
+                            {category.subcategories.map((sub) => (
+                              <Link
+                                key={sub.name}
+                                href={sub.href}
+                                className="block px-5 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-[var(--color-primary)] transition-colors border-b border-slate-50 last:border-0"
+                              >
+                                {sub.name}
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <Link
                 key={link.name}
@@ -90,10 +155,42 @@ export default function Navbar() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="absolute top-0 left-0 w-full h-screen bg-white flex flex-col items-center justify-center space-y-6 z-40"
+            className="absolute top-0 left-0 w-full h-screen bg-white flex flex-col items-center justify-center space-y-6 z-40 overflow-y-auto pt-20 pb-10"
           >
             {navLinks.map((link) => {
-              const isActive = pathname === link.href;
+              const isActive = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href));
+              
+              if (link.hasDropdown) {
+                return (
+                  <div key={link.name} className="flex flex-col items-center w-full">
+                    <Link
+                      href={link.href}
+                      className={`px-8 py-3 rounded-full text-2xl font-bold transition-all ${
+                        isActive 
+                          ? "bg-[var(--color-primary)] text-white" 
+                          : "text-slate-600 hover:text-[var(--color-primary)]"
+                      }`}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {link.name}
+                    </Link>
+                    {/* Simplified mobile sub-menu showing just main categories */}
+                    <div className="flex flex-col items-center mt-2 space-y-2">
+                      {productCategories.map(cat => (
+                        <Link 
+                          key={cat.name} 
+                          href={cat.href}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="text-slate-500 font-medium text-lg"
+                        >
+                          {cat.name}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )
+              }
+
               return (
                 <Link
                   key={link.name}
@@ -111,7 +208,7 @@ export default function Navbar() {
             })}
             <Link
               href="/contact-us"
-              className="mt-4 bg-[var(--color-primary)] text-white px-10 py-4 rounded-full text-xl font-bold"
+              className="mt-6 bg-[var(--color-primary)] text-white px-10 py-4 rounded-full text-xl font-bold shadow-lg shadow-blue-500/20"
               onClick={() => setMobileMenuOpen(false)}
             >
               Contact us
@@ -122,3 +219,4 @@ export default function Navbar() {
     </header>
   );
 }
+

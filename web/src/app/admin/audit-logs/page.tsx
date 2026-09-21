@@ -41,6 +41,12 @@ export default function AuditLogsPage() {
         return { icon: UserPlus, color: "text-purple-500", bg: "bg-purple-50", border: "border-purple-200", label: "Career Created" };
       case "INQUIRY_DELETED":
         return { icon: Trash2, color: "text-red-500", bg: "bg-red-50", border: "border-red-200", label: "Inquiry Deleted" };
+      case "PRODUCT_CREATED":
+        return { icon: FilePlus, color: "text-emerald-500", bg: "bg-emerald-50", border: "border-emerald-200", label: "Product Created" };
+      case "PRODUCT_UPDATED":
+        return { icon: ClipboardList, color: "text-amber-500", bg: "bg-amber-50", border: "border-amber-200", label: "Product Updated" };
+      case "PRODUCT_DELETED":
+        return { icon: Trash2, color: "text-red-500", bg: "bg-red-50", border: "border-red-200", label: "Product Deleted" };
       default:
         return { icon: ClipboardList, color: "text-slate-500", bg: "bg-slate-50", border: "border-slate-200", label: action };
     }
