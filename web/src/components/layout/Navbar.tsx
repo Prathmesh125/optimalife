@@ -104,7 +104,7 @@ export default function Navbar() {
                         {/* Level 2 Dropdown (Subcategories) */}
                         {category.subcategories && (
                           <div className="absolute top-0 left-full w-64 bg-white border border-slate-100 shadow-xl rounded-xl opacity-0 invisible group-hover/sub:opacity-100 group-hover/sub:visible transition-all duration-200 z-50 overflow-hidden -ml-2">
-                            {category.subcategories.map((sub) => (
+                            {category.subcategories.map((sub: any) => (
                               <Link
                                 key={sub.name}
                                 href={sub.href}

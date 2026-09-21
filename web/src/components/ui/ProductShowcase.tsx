@@ -110,7 +110,7 @@ export default function ProductShowcase({ products, categories = [] }: { product
                   ALL PRODUCTS
                 </button>
 
-                {currentSubCategories.map(sub => (
+                {currentSubCategories.map((sub: any) => (
                   <button
                     onClick={() => setActiveSubCategory(sub.id)}
                     key={sub.id}
