@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Menu, X, ChevronDown, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
@@ -25,6 +25,8 @@ const productCategories = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [productsOpen, setProductsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -35,6 +37,19 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Handle click outside for desktop dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setProductsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   const navLinks = [
     { name: "Home", href: "/" },
     { name: "About us", href: "/about-us" },
@@ -42,6 +57,7 @@ export default function Navbar() {
     { name: "Optiserve", href: "/optiserve" },
     { name: "Careers", href: "/careers" },
     { name: "Blogs", href: "/blogs" },
+    { name: "Contact Us", href: "/contact-us" },
   ];
 
   return (
@@ -61,45 +77,51 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden lg:flex items-center space-x-2">
+        <nav className="hidden lg:flex items-center space-x-8">
           {navLinks.map((link) => {
             const isActive = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href));
             
             if (link.hasDropdown) {
               return (
-                <div key={link.name} className="relative group">
-                  <Link
-                    href={link.href}
-                    className={`flex items-center px-5 py-2 rounded-full font-semibold text-[15px] transition-all ${
-                      isActive 
-                        ? "bg-[var(--color-primary)] text-white" 
-                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                <div key={link.name} className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setProductsOpen(!productsOpen)}
+                    className={`flex items-center font-medium text-[15px] transition-colors ${
+                      isActive || productsOpen
+                        ? "text-[#6C63FF]" 
+                        : "text-[#6C63FF]/70 hover:text-[#6C63FF]"
                     }`}
                   >
                     {link.name}
-                    <ChevronDown size={14} className="ml-1 opacity-70 group-hover:rotate-180 transition-transform duration-300" />
-                  </Link>
+                    <ChevronDown size={16} className={`ml-1 transition-transform duration-300 ${productsOpen ? "rotate-180" : ""}`} />
+                  </button>
 
                   {/* Level 1 Dropdown */}
-                  <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-slate-100 shadow-xl rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden transform origin-top-left group-hover:scale-100 scale-95">
+                  <div 
+                    className={`absolute top-full left-0 mt-4 w-56 bg-white shadow-[0_4px_20px_rgb(0,0,0,0.08)] transition-all duration-200 z-50 origin-top-left ${
+                      productsOpen ? "opacity-100 visible scale-100" : "opacity-0 invisible scale-95"
+                    }`}
+                  >
                     {productCategories.map((category) => (
-                      <div key={category.name} className="relative group/sub">
+                      <div key={category.name} className="relative group/sub border-b border-slate-100 last:border-0">
                         <Link 
                           href={category.href}
-                          className="flex items-center justify-between px-5 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-[var(--color-primary)] transition-colors border-b border-slate-50 last:border-0"
+                          onClick={() => setProductsOpen(false)}
+                          className="flex items-center justify-between px-5 py-3.5 text-[15px] font-medium text-[#6C63FF]/80 hover:text-[#6C63FF] hover:bg-slate-50 transition-colors"
                         >
                           {category.name}
-                          {category.subcategories && <ChevronRight size={14} className="opacity-50" />}
+                          {category.subcategories && <ChevronRight size={16} className="opacity-70 text-[#3a356a]" />}
                         </Link>
                         
                         {/* Level 2 Dropdown (Subcategories) */}
                         {category.subcategories && (
-                          <div className="absolute top-0 left-full w-64 bg-white border border-slate-100 shadow-xl rounded-xl opacity-0 invisible group-hover/sub:opacity-100 group-hover/sub:visible transition-all duration-200 z-50 overflow-hidden -ml-2">
+                          <div className="absolute top-0 left-[100%] w-72 bg-white shadow-[0_4px_20px_rgb(0,0,0,0.08)] opacity-0 invisible group-hover/sub:opacity-100 group-hover/sub:visible transition-all duration-200 z-50">
                             {category.subcategories.map((sub) => (
                               <Link
                                 key={sub.name}
                                 href={sub.href}
-                                className="block px-5 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-[var(--color-primary)] transition-colors border-b border-slate-50 last:border-0"
+                                onClick={() => setProductsOpen(false)}
+                                className="block px-5 py-3.5 text-[15px] font-medium text-[#6C63FF]/80 hover:text-[#6C63FF] hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0"
                               >
                                 {sub.name}
                               </Link>
@@ -117,10 +139,10 @@ export default function Navbar() {
               <Link
                 key={link.name}
                 href={link.href}
-                className={`px-5 py-2 rounded-full font-semibold text-[15px] transition-all ${
+                className={`font-medium text-[15px] transition-colors ${
                   isActive 
-                    ? "bg-[var(--color-primary)] text-white" 
-                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    ? "text-[#6C63FF]" 
+                    : "text-[#6C63FF]/70 hover:text-[#6C63FF]"
                 }`}
               >
                 {link.name}
@@ -128,16 +150,6 @@ export default function Navbar() {
             );
           })}
         </nav>
-
-        {/* Right CTA */}
-        <div className="hidden lg:block">
-          <Link
-            href="/contact-us"
-            className="bg-[var(--color-primary)] text-white px-6 py-2.5 rounded-full text-[15px] font-bold hover:bg-[var(--color-primary-light)] transition-colors"
-          >
-            Contact us
-          </Link>
-        </div>
 
         {/* Mobile Toggle */}
         <button
@@ -165,10 +177,10 @@ export default function Navbar() {
                   <div key={link.name} className="flex flex-col items-center w-full">
                     <Link
                       href={link.href}
-                      className={`px-8 py-3 rounded-full text-2xl font-bold transition-all ${
+                      className={`px-8 py-3 text-2xl font-medium transition-all ${
                         isActive 
-                          ? "bg-[var(--color-primary)] text-white" 
-                          : "text-slate-600 hover:text-[var(--color-primary)]"
+                          ? "text-[#6C63FF]" 
+                          : "text-[#6C63FF]/70 hover:text-[#6C63FF]"
                       }`}
                       onClick={() => setMobileMenuOpen(false)}
                     >
@@ -181,7 +193,7 @@ export default function Navbar() {
                           key={cat.name} 
                           href={cat.href}
                           onClick={() => setMobileMenuOpen(false)}
-                          className="text-slate-500 font-medium text-lg"
+                          className="text-[#6C63FF]/60 font-medium text-lg hover:text-[#6C63FF]"
                         >
                           {cat.name}
                         </Link>
@@ -195,10 +207,10 @@ export default function Navbar() {
                 <Link
                   key={link.name}
                   href={link.href}
-                  className={`px-8 py-3 rounded-full text-2xl font-bold transition-all ${
+                  className={`px-8 py-3 text-2xl font-medium transition-all ${
                     isActive 
-                      ? "bg-[var(--color-primary)] text-white" 
-                      : "text-slate-600 hover:text-[var(--color-primary)]"
+                      ? "text-[#6C63FF]" 
+                      : "text-[#6C63FF]/70 hover:text-[#6C63FF]"
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -206,17 +218,9 @@ export default function Navbar() {
                 </Link>
               );
             })}
-            <Link
-              href="/contact-us"
-              className="mt-6 bg-[var(--color-primary)] text-white px-10 py-4 rounded-full text-xl font-bold shadow-lg shadow-blue-500/20"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Contact us
-            </Link>
           </motion.div>
         )}
       </AnimatePresence>
     </header>
   );
 }
-
