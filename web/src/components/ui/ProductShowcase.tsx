@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowRight, Package, Shield, Beaker, Zap, Settings, Search } from "lucide-react";
+import { motion } from "framer-motion";
 
 const CATEGORIES = [
   { 
