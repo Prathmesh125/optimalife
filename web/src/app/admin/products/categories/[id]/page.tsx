@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { doc, getDoc, setDoc, collection, query, getDocs, writeBatch } from "firebase/firestore";
+import { doc, getDoc, setDoc, collection, query, getDocs, writeBatch, where } from "firebase/firestore";
 import { db } from "@/lib/firebase/client";
 import { auth } from "@/lib/firebase/client";
 import { logAdminAction } from "@/lib/logger";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { Save, ArrowLeft, Plus, Trash2, LayoutGrid } from "lucide-react";
+import { Save, ArrowLeft, Plus, Trash2, LayoutGrid, Package, Edit2 } from "lucide-react";
 import * as Icons from "lucide-react";
 
 // Curated list of high-quality Lucide icons for categories
@@ -47,6 +47,7 @@ export default function CategoryEditor() {
   // State for subcategory being added
   const [newSubId, setNewSubId] = useState("");
   const [newSubName, setNewSubName] = useState("");
+  const [directProducts, setDirectProducts] = useState<any[]>([]);
 
   useEffect(() => {
     async function fetchCategory() {
@@ -56,6 +57,18 @@ export default function CategoryEditor() {
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           setData(docSnap.data() as CategoryData);
+          
+          // Fetch direct products
+          try {
+            const pQuery = query(collection(db, "products"), where("category", "==", categoryId));
+            const pSnap = await getDocs(pQuery);
+            const prods = pSnap.docs
+              .map(d => ({ slug: d.id, ...d.data() } as any))
+              .filter(p => !p.subCategory); // filter client-side to catch both empty string and undefined
+            setDirectProducts(prods);
+          } catch (e) {
+            console.error("Error fetching direct products:", e);
+          }
         } else {
           alert("Category not found!");
           router.push("/admin/products");
@@ -263,18 +276,50 @@ export default function CategoryEditor() {
           </div>
 
           {!isNew && (
-             <div className="bg-[#6C63FF]/5 rounded-3xl p-8 border border-[#6C63FF]/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-lg font-bold text-[#3a356a]">Direct Products</h3>
-                  <p className="text-slate-600 text-sm mt-1 max-w-md">Add products directly to this category without assigning them to a subcategory. Useful if subcategories are entirely optional for you.</p>
+             <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden">
+                <div className="p-8 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-xl font-bold text-[#3a356a]">Direct Products</h3>
+                    <p className="text-slate-500 text-sm mt-1">Products added directly to this category (no subcategory).</p>
+                  </div>
+                  <Link
+                    href={`/admin/products/new?category=${categoryId}`}
+                    className="flex items-center space-x-2 bg-[#6C63FF] text-white px-5 py-2.5 rounded-xl font-bold hover:bg-[#5a52d5] transition-all shadow-sm"
+                  >
+                    <Plus size={18} />
+                    <span>Add Product</span>
+                  </Link>
                 </div>
-                <Link
-                  href={`/admin/products/items?category=${categoryId}`}
-                  className="flex items-center space-x-2 bg-white text-[#6C63FF] border border-[#6C63FF]/20 px-6 py-3 rounded-xl font-bold hover:bg-[#6C63FF] hover:text-white hover:shadow-lg transition-all"
-                >
-                  <LayoutGrid size={18} />
-                  <span>Manage Products</span>
-                </Link>
+                
+                {directProducts.length > 0 ? (
+                  <div className="divide-y divide-slate-100">
+                    {directProducts.map(product => (
+                      <div key={product.slug} className="p-6 hover:bg-slate-50 transition-colors flex items-center justify-between group">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-10 h-10 rounded-lg bg-indigo-50 text-[#6C63FF] flex items-center justify-center">
+                            <Package size={20} />
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-slate-800">{product.title || product.slug}</h4>
+                            <p className="text-xs text-slate-400 font-mono mt-0.5">{product.slug}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Link 
+                            href={`/admin/products/${product.slug}`}
+                            className="w-8 h-8 rounded-lg bg-white border border-slate-200 text-slate-400 flex items-center justify-center hover:text-[#6C63FF] hover:border-[#6C63FF] transition-all"
+                          >
+                            <Edit2 size={14} />
+                          </Link>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-8 text-center border-t border-slate-100">
+                    <p className="text-slate-400 text-sm font-medium">No direct products found in this category.</p>
+                  </div>
+                )}
              </div>
           )}
         </div>
