@@ -81,8 +81,8 @@ export default function Navbar() {
                   </Link>
 
                   {/* Level 1 Dropdown */}
-                  <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-slate-100 shadow-xl rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden transform origin-top-left group-hover:scale-100 scale-95">
-                    {productCategories.map((category) => (
+                  <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-slate-100 shadow-xl rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 transform origin-top-left group-hover:scale-100 scale-95">
+                    {productCategories.map((category, index) => (
                       <div key={category.name} className="relative group/sub">
                         <Link 
                           href={category.href}
