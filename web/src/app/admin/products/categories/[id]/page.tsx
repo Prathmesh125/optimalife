@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, collection, query, getDocs, writeBatch } from "firebase/firestore";
 import { db } from "@/lib/firebase/client";
 import { auth } from "@/lib/firebase/client";
 import { logAdminAction } from "@/lib/logger";
@@ -80,7 +80,41 @@ export default function CategoryEditor() {
     
     setSaving(true);
     try {
-      await setDoc(doc(db, "productCategories", idToSave), data);
+      // Find order conflicts
+      const catsQuery = query(collection(db, "productCategories"));
+      const querySnapshot = await getDocs(catsQuery);
+      const existingCats = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as CategoryData }));
+      
+      const conflictCat = existingCats.find(c => c.id !== idToSave && c.order === data.order);
+      
+      const batch = writeBatch(db);
+      
+      if (conflictCat) {
+        if (isNew) {
+           // Bump logic for new categories
+           const catsToBump = existingCats.filter(c => c.order >= data.order).sort((a, b) => a.order - b.order);
+           let currentOrder = data.order;
+           for (const cat of catsToBump) {
+             if (cat.order === currentOrder) {
+                currentOrder++;
+                batch.update(doc(db, "productCategories", cat.id), { order: currentOrder });
+             } else {
+                break; // gap exists
+             }
+           }
+        } else {
+           // Swap logic for editing existing categories
+           const originalCat = existingCats.find(c => c.id === idToSave);
+           if (originalCat) {
+             batch.update(doc(db, "productCategories", conflictCat.id), { order: originalCat.order });
+           }
+        }
+      }
+
+      const docRef = doc(db, "productCategories", idToSave);
+      batch.set(docRef, data);
+      
+      await batch.commit();
       
       await logAdminAction(
         isNew ? "CATEGORY_CREATED" : "CATEGORY_UPDATED",
@@ -227,6 +261,22 @@ export default function CategoryEditor() {
               </div>
             </div>
           </div>
+
+          {!isNew && (
+             <div className="bg-[#6C63FF]/5 rounded-3xl p-8 border border-[#6C63FF]/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-lg font-bold text-[#3a356a]">Direct Products</h3>
+                  <p className="text-slate-600 text-sm mt-1 max-w-md">Add products directly to this category without assigning them to a subcategory. Useful if subcategories are entirely optional for you.</p>
+                </div>
+                <Link
+                  href={`/admin/products/items?category=${categoryId}`}
+                  className="flex items-center space-x-2 bg-white text-[#6C63FF] border border-[#6C63FF]/20 px-6 py-3 rounded-xl font-bold hover:bg-[#6C63FF] hover:text-white hover:shadow-lg transition-all"
+                >
+                  <LayoutGrid size={18} />
+                  <span>Manage Products</span>
+                </Link>
+             </div>
+          )}
         </div>
 
         {/* Right Column: Subcategories */}
