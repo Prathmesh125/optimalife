@@ -9,7 +9,14 @@ export const dynamic = "force-dynamic";
 
 async function getProduct(slug: string) {
   const doc = await adminDb.collection("products").doc(slug).get();
-  return doc.exists ? { id: doc.id, ...doc.data() } as any : null;
+  if (!doc.exists) return null;
+  const data = doc.data() as any;
+  return { 
+    id: doc.id, 
+    ...data,
+    createdAt: data.createdAt?.toDate?.()?.toISOString() || null,
+    updatedAt: data.updatedAt?.toDate?.()?.toISOString() || null,
+  };
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
