@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { collection, getDocs, query, deleteDoc, doc, orderBy } from "firebase/firestore";
+import { useEffect, useState, useRef } from "react";
+import { collection, getDocs, query, deleteDoc, doc, orderBy, writeBatch } from "firebase/firestore";
 import { db } from "@/lib/firebase/client";
 import { auth } from "@/lib/firebase/client";
 import { logAdminAction } from "@/lib/logger";
 import Link from "next/link";
-import { Edit2, Plus, Trash2, Folder, Layers, ArrowRight } from "lucide-react";
+import { Edit2, Plus, Trash2, Folder, Layers, ArrowRight, GripVertical } from "lucide-react";
 import * as Icons from "lucide-react";
 
 interface CategoryDoc {
@@ -21,6 +21,10 @@ interface CategoryDoc {
 export default function AdminCategoriesList() {
   const [categories, setCategories] = useState<CategoryDoc[]>([]);
   const [loading, setLoading] = useState(true);
+  const [savingOrder, setSavingOrder] = useState(false);
+  
+  const dragItem = useRef<number | null>(null);
+  const dragOverItem = useRef<number | null>(null);
 
   useEffect(() => {
     async function fetchCategories() {
@@ -57,12 +61,87 @@ export default function AdminCategoriesList() {
     }
   };
 
+  const handleDragStart = (e: React.DragEvent<HTMLTableRowElement>, index: number) => {
+    dragItem.current = index;
+    // Add small delay so the dragged ghost image isn't also transparent
+    setTimeout(() => {
+      if (e.target && (e.target as HTMLElement).classList) {
+        (e.target as HTMLElement).classList.add("opacity-50");
+      }
+    }, 0);
+  };
+
+  const handleDragEnter = (e: React.DragEvent<HTMLTableRowElement>, index: number) => {
+    if (dragItem.current === null) return;
+    
+    dragOverItem.current = index;
+    const items = [...categories];
+    const draggedItemContent = items[dragItem.current];
+    
+    // Remove the item from original position
+    items.splice(dragItem.current, 1);
+    // Insert at new position
+    items.splice(dragOverItem.current, 0, draggedItemContent);
+    
+    dragItem.current = dragOverItem.current;
+    dragOverItem.current = null;
+    
+    setCategories(items);
+  };
+
+  const handleDragEnd = async (e: React.DragEvent<HTMLTableRowElement>) => {
+    if (e.target && (e.target as HTMLElement).classList) {
+      (e.target as HTMLElement).classList.remove("opacity-50");
+    }
+    dragItem.current = null;
+    dragOverItem.current = null;
+
+    // Save to firestore
+    await saveNewOrder(categories);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLTableRowElement>) => {
+    e.preventDefault(); // necessary to allow drop
+  };
+
+  const saveNewOrder = async (items: CategoryDoc[]) => {
+    setSavingOrder(true);
+    try {
+      const batch = writeBatch(db);
+      let changed = false;
+      
+      const newItems = items.map((cat, index) => {
+        const newOrder = index + 1;
+        if (cat.order !== newOrder) {
+          batch.update(doc(db, "productCategories", cat.id), { order: newOrder });
+          changed = true;
+          return { ...cat, order: newOrder };
+        }
+        return cat;
+      });
+      
+      if (changed) {
+        await batch.commit();
+        setCategories(newItems);
+        await logAdminAction("CATEGORY_UPDATED", auth.currentUser?.email || "Unknown", "Reordered product categories");
+      }
+    } catch (error) {
+      console.error("Error saving new order:", error);
+      alert("Failed to save the new order. Please refresh and try again.");
+    } finally {
+      setSavingOrder(false);
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-black text-[#3a356a] tracking-tight">Product Categories</h1>
-          <p className="text-slate-500 font-medium mt-1">Manage your main product categories and their subcategories.</p>
+          <p className="text-slate-500 font-medium mt-1 flex items-center">
+            Manage your main product categories and their subcategories. 
+            {savingOrder && <span className="ml-3 text-xs font-bold text-[#6C63FF] bg-indigo-50 px-2 py-1 rounded-md animate-pulse">Saving order...</span>}
+          </p>
         </div>
         <div className="flex gap-3">
           <Link
@@ -97,12 +176,23 @@ export default function AdminCategoriesList() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {categories.map((category) => {
+              {categories.map((category, index) => {
                 const IconComp = (Icons as any)[category.icon] || Folder;
                 return (
-                  <tr key={category.id} className="hover:bg-slate-50/80 transition-colors group">
+                  <tr 
+                    key={category.id} 
+                    className={`hover:bg-slate-50/80 transition-colors group ${savingOrder ? 'pointer-events-none' : ''}`}
+                    draggable={!savingOrder}
+                    onDragStart={(e) => handleDragStart(e, index)}
+                    onDragEnter={(e) => handleDragEnter(e, index)}
+                    onDragEnd={handleDragEnd}
+                    onDragOver={handleDragOver}
+                  >
                     <td className="px-6 py-5">
                       <div className="flex items-center space-x-4">
+                        <div className="text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing p-1 transition-colors">
+                           <GripVertical size={20} />
+                        </div>
                         <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-[#6C63FF]">
                           <IconComp size={24} />
                         </div>
