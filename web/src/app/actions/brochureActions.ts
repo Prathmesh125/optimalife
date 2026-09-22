@@ -6,6 +6,7 @@ export async function submitBrochureRequest(data: {
   firstName: string;
   lastName: string;
   email: string;
+  phone: string;
   productName: string;
   productId: string;
 }) {

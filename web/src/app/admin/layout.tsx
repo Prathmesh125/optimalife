@@ -23,6 +23,7 @@ function AdminSidebar() {
     { name: "Careers", href: "/admin/careers", icon: Briefcase },
     { name: "Inquiries", href: "/admin/inquiries", icon: MessageSquare },
     { name: "Products", href: "/admin/products", icon: Package },
+    { name: "Brochure Requests", href: "/admin/requests", icon: FileText },
     { name: "Audit Logs", href: "/admin/audit-logs", icon: ClipboardList },
   ];
 

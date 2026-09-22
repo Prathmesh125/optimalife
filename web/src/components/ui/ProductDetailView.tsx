@@ -25,7 +25,7 @@ export default function ProductDetailView({ product, cleanContent, featuredImage
   const [activeTab, setActiveTab] = useState<"features" | "dosage">("features");
   const [isModalOpen, setIsModalOpen] = useState(false);
   
-  const [formData, setFormData] = useState({ firstName: '', lastName: '', email: '' });
+  const [formData, setFormData] = useState({ firstName: '', lastName: '', email: '', phone: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -57,7 +57,7 @@ export default function ProductDetailView({ product, cleanContent, featuredImage
       setTimeout(() => {
         setIsModalOpen(false);
         setSuccess(false);
-        setFormData({ firstName: '', lastName: '', email: '' });
+        setFormData({ firstName: '', lastName: '', email: '', phone: '' });
       }, 3000);
     } catch (err) {
       console.error(err);
@@ -290,6 +290,16 @@ export default function ProductDetailView({ product, cleanContent, featuredImage
                       className="w-full px-5 py-4 bg-slate-50 rounded-xl border border-slate-100 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6C63FF] focus:border-transparent transition-all text-slate-700 font-medium placeholder:text-slate-400"
                       value={formData.email}
                       onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <input 
+                      type="tel" 
+                      required
+                      placeholder="Phone Number" 
+                      className="w-full px-5 py-4 bg-slate-50 rounded-xl border border-slate-100 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6C63FF] focus:border-transparent transition-all text-slate-700 font-medium placeholder:text-slate-400"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
                     />
                   </div>
                   <div className="pt-6">
