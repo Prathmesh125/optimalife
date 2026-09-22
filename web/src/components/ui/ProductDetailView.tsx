@@ -29,11 +29,18 @@ export default function ProductDetailView({ product, cleanContent, featuredImage
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  // Fallbacks if structured data doesn't exist
+  // Fallbacks and type safety if structured data doesn't exist or is legacy string
   const categoryName = product.category ? product.category.replace(/-/g, ' ') : "Bio Security";
   const subCategoryName = product.subCategory ? product.subCategory.replace(/-/g, ' ') : null;
-  const targetSpecies = product.targetSpecies || ["Broilers", "Layers", "Breeders"];
-  const availablePacks = product.availablePacks || ["5L"];
+  
+  const targetSpecies = Array.isArray(product.targetSpecies) 
+    ? product.targetSpecies 
+    : (typeof product.targetSpecies === 'string' ? product.targetSpecies.split(',').map((s: string) => s.trim()) : ["Broilers", "Layers", "Breeders"]);
+    
+  const availablePacks = Array.isArray(product.availablePacks)
+    ? product.availablePacks
+    : (typeof product.availablePacks === 'string' ? product.availablePacks.split(',').map((s: string) => s.trim()) : ["5L"]);
+    
   const features = product.features || null;
   const dosage = product.dosage || null;
 
